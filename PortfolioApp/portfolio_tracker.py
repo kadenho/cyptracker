@@ -1,5 +1,5 @@
 import re
-from datetime import datetime
+from datetime import datetime, date
 
 from kivy.app import App
 from kivy.uix.button import Button
@@ -10,10 +10,10 @@ from kivy.uix.popup import Popup
 from kivy.core.window import Window
 from sqlalchemy.exc import SQLAlchemyError
 
+from HistoricalPriceViewer.main import coin_gecko_api
 from Tokenstaller.cryptos import CryptoDatabase, Crypto, PortfolioEntry, CryptoPrice
-
 from Tokenstaller.cryptos import ValueCheck
-
+from pycoingecko import CoinGeckoAPI
 
 class PortfolioTrackerApp(App):
     kv_file = 'portfolio_tracker.kv'
@@ -31,6 +31,7 @@ class PortfolioTrackerApp(App):
     portfolio_report_previous_date = StringProperty('')
     portfolio_report_total = NumericProperty(0)
     portfolio_report_percent_change = NumericProperty(0)
+    coingecko_api = CoinGeckoAPI(demo_api_key='CG-1h5S2Brt9U9LxgUxyjtU4RBj')
 
     def __init__(self, **kwargs):
         super(PortfolioTrackerApp, self).__init__(**kwargs)
@@ -51,18 +52,30 @@ class PortfolioTrackerApp(App):
         :param lower: The highest value to return pure red [1, 0, 0, 1]
         :param upper: The lowest value to return pure green [0, 1, 0, 1]
         :return: RGBA list of colors between 0 and 1
+        >>> import sys
+        >>> from io import StringIO
+        >>> sys.stdin = StringIO('weak')
         >>> label = Label(text='100',color=[0, 0, 0, 1])
         >>> app = PortfolioTrackerApp()
+        What is the password to your MySQL server?
         >>> app.text_color_from_value(label, -100, 100)
         [0.0, 1.0, 0.0, 1.0]
+        >>> import sys
+        >>> from io import StringIO
+        >>> sys.stdin = StringIO('weak')
         >>> color = [0.5, 0.0, 0.5, 1]
         >>> label = Label(text='50',color=color)
         >>> app = PortfolioTrackerApp()
+        What is the password to your MySQL server?
         >>> app.text_color_from_value(label, -100, 100)
         [0.25, 0.5, 0.25, 1.0]
+        >>> import sys
+        >>> from io import StringIO
+        >>> sys.stdin = StringIO('weak')
         >>> color = [1.0, 1.0, 0.0, 1]
         >>> label = Label(text='-25',color=color)
         >>> app = PortfolioTrackerApp()
+        What is the password to your MySQL server?
         >>> app.text_color_from_value(label, -100, 100)
         [1.0, 0.75, 0.0, 1.0]
         """
@@ -93,7 +106,6 @@ class PortfolioTrackerApp(App):
         while len(color) < 4:
             color.append(1.0)
         color = [float(color[i]) for i in range(4)]
-        print(color)
         match variable:
             case 'Background':
                 self.background_color = color
@@ -149,16 +161,25 @@ class PortfolioTrackerApp(App):
 
     def add_crypto(self, name, symbol):
         """
-        Adds a crypto to the database via a name and symbol, currently adds its id
-        as its symbol but should find it through an API call.
-        This means, in the final implementation, the user cannot add two coins with the same
-        name and symbol despite that being possible in the API.
+        Adds a crypto to the database via a name and symbol.
+        Although such instances exist, the user cannot add two cryptos with the
+        same name and symbol since this method will not be able to give them
+        distinct ids.
         :param name: Name of the crypto to be added
         :param symbol: Symbol of the crypto to be added
         :return: None
         """
-        # TODO set crypto_id to an id found through API using name and symbol
-        crypto = Crypto(name=name, symbol=symbol, crypto_id=symbol)
+
+        '''Filters the full list of coins using the lambda function, then gets converted
+        to a list so it can access each dictionary fitting the criteria.
+        Result is a list of dictionaries with keys {'id':, 'name':, 'symbol':}
+        that have the same name and symbol as the arguments to this method,
+        then you take the value of the dictionary's id.'''
+
+        id = list(filter(lambda dictionary: dictionary["symbol"] == symbol\
+                    and dictionary["name"] == name, coin_gecko_api.get_coins_list()))[0]['id']
+
+        crypto = Crypto(name=name, symbol=symbol, crypto_id=id)
         if not (len(name) > 0 and len(symbol) > 0):
             self.display_popup('Empty Data', 'Please enter data for all fields.', 'New Cryptocurrency')
             return
@@ -176,25 +197,27 @@ class PortfolioTrackerApp(App):
         self.session.commit()
         self.display_popup('Entry Added', 'Crypto entry added.', 'Menu')
 
-    def add_crypto_price(self, crypto_id, date, price):
-        crypto_price = CryptoPrice(crypto_id=crypto_id, date=date, price=price)
+    def add_crypto_price(self, crypto_id, timestamp, price):
+        crypto_price = CryptoPrice(crypto_id=crypto_id, timestamp=timestamp, price=price)
         self.session.add(crypto_price)
         self.session.commit()
 
-    def add_portfolio_entry(self, crypto_id, date, quantity):
+    def add_portfolio_entry(self, crypto_id, entry_date, quantity):
         """
         Adds a portfolio entry to the database using its id, a date, and a quantity
         :param crypto_id: id of the crypto
-        :param date: Date of entry
+        :param entry_date: Date of entry
         :param quantity: Quantity of the crypto bought at that date
         :return: None
         """
-        does_price_match = CryptoPrice.crypto_id == crypto_id and CryptoPrice.timestamp == date
+        does_crypto_date_match = CryptoPrice.crypto_id == crypto_id and CryptoPrice.timestamp == entry_date
         if len(quantity) == 0:
             self.display_popup('Empty Data', 'Please enter in a quantity.', 'New Portfolio Entry')
             return
         try:
-            date = datetime.fromisoformat(date)
+            entry_date = date.fromisoformat(entry_date)
+            # Date in format 'DD-MM-YYYY' as required by the CoinGecko API
+            adjusted_date = f'{entry_date.day:02d}-{entry_date.month:02d}-{entry_date.year:04d}'
         except ValueError as error:
             self.display_popup('Date Error', str(error), 'New Portfolio Entry')
             return
@@ -202,11 +225,12 @@ class PortfolioTrackerApp(App):
             self.display_popup('Value Error', 'Quantity is too high, please enter a lower quantity',
                                'Add Portfolio Entry')
             return
-        # TODO Replace '100' with an API call to fetch price at that date
-        if self.session.query(CryptoPrice).filter(does_price_match).count() == 0:
-            self.add_crypto_price(crypto_id, date, 100)
-        investment = self.session.query(CryptoPrice).filter(does_price_match).first().price * int(quantity)
-        portfolio_entry = PortfolioEntry(crypto_id=crypto_id, date=date, quantity=quantity, investment=investment)
+        if self.session.query(CryptoPrice).filter(does_crypto_date_match).count() == 0:
+            historic_coin_data = coin_gecko_api.get_coin_history_by_id(crypto_id, adjusted_date)
+            price = historic_coin_data['market_data']['current_price']['usd']
+            self.add_crypto_price(crypto_id, entry_date, price)
+        investment = self.session.query(CryptoPrice).filter(does_crypto_date_match).one().price * int(quantity)
+        portfolio_entry = PortfolioEntry(crypto_id=crypto_id, timestamp=entry_date, quantity=quantity, investment=investment)
         try:
             self.session.add(portfolio_entry)
             self.session.commit()
@@ -239,7 +263,8 @@ class PortfolioTrackerApp(App):
             crypto_price = self.session.query(CryptoPrice).filter(CryptoPrice.crypto_id == crypto_id and timestamp == timestamp)
             if crypto_price.count() == 0:
                 # Price defaults to 100, should be an API call
-                current_price = CryptoPrice(crypto_id=crypto_id, timestamp=timestamp, price=100)
+                price = coin_gecko_api.get_price(crypto_id, 'usd')
+                current_price = CryptoPrice(crypto_id=crypto_id, timestamp=timestamp, price=price)
                 self.session.add(current_price)
                 self.session.commit()
                 total_value += current_price.price * crypto_quantities[crypto_id] / 100
@@ -248,13 +273,13 @@ class PortfolioTrackerApp(App):
 
         previous_value = total_initial_investment if is_first_value_check else previous_value_check.total_value
         percentage_change = 100 * (total_value - previous_value) / abs(previous_value) if previous_value != 0 else 0
-        value_check = ValueCheck(date=timestamp, total_value=total_value, percentage_change=percentage_change)
+        value_check = ValueCheck(timestamp=timestamp, total_value=total_value, percentage_change=percentage_change)
         self.session.add(value_check)
         self.session.commit()
-        self.portfolio_report_date = str(timestamp)
+        self.portfolio_report_date = str(timestamp.date())
         self.portfolio_report_total = total_value
         self.portfolio_report_previous_date = str(
-            previous_value_check.date) if previous_value_check is not None else 'N/A'
+            previous_value_check.timestamp.date()) if previous_value_check is not None else 'N/A'
         self.portfolio_report_percent_change = round(percentage_change)
 
 
@@ -282,7 +307,6 @@ class CustomButton(Button):
 
 
 if __name__ == '__main__':
-
     Window.size = (400, (16 / 9) * 400)
     Window.top = 0
 
@@ -290,5 +314,7 @@ if __name__ == '__main__':
         app = PortfolioTrackerApp()
         app.run()
     except SQLAlchemyError as e:
-        print(e)
-        exit(1)
+        print(f'There was a database error: {e}')
+        PortfolioTrackerApp.display_popup(app, title='Database Error',
+                                          text=f'There was a problem connecting to the server: {e}',
+                                          next_screen='Menu')

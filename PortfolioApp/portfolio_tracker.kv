@@ -242,10 +242,12 @@ ScreenManager:
                 text: f'${app.portfolio_report_total:,.2f}'
                 text_size: self.size
                 bold: True
-                color: app.text_color_from_value(self,-100000,100000)
+                color: app.text_color
                 outline_width: 1
                 halign: 'center'
                 valign: 'middle'
+                on_text:
+                    self.color = app.text_color_from_value(self, -100000, 100000)
 
             Label:
                 text: 'Date of Last Report'
@@ -270,12 +272,14 @@ ScreenManager:
             Label:
                 id: percent_change
                 text: f'{app.portfolio_report_percent_change:,}%'
-                color: app.text_color_from_value(self, -100, 100)
+                color: app.text_color
                 text_size: self.size
                 outline_width: 1
                 bold: True
                 halign: 'center'
                 valign: 'middle'
+                on_text:
+                    self.color = app.text_color_from_value(self, -100, 100)
 
             CustomButton:
                 text: 'Return to Menu'
