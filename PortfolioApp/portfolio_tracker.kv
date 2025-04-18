@@ -154,6 +154,8 @@ ScreenManager:
                 values: app.crypto_ids
                 size_hint: (0.5,1.0)
                 pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
+                on_press:
+                    self.values = app.crypto_ids
 
             Label:
                 text: 'Date Purchased'

@@ -119,7 +119,7 @@ class PortfolioTrackerApp(App):
             cryptos = self.session.query(Crypto)
             crypto_count = cryptos.count()
             for i in range(crypto_count):
-                ids.append(cryptos[i].coin_id)
+                ids.append(cryptos[i].crypto_id)
         except SQLAlchemyError:
             self.title_text = 'Database Error, make sure your port, username, and password are correct'
 
@@ -215,10 +215,10 @@ class PortfolioTrackerApp(App):
             return
         self.display_popup('Entry Added', 'Portfolio Entry successfully added', 'Menu')
 
-    def add_value_check(self, date=datetime.now().date()):
+    def add_value_check(self, timestamp=datetime.now()):
         """
         Adds a value check to the database containing a date, total value, and percentage change.
-        :param date: Date of the value check, defaults to the current date.
+        :param timestamp: Date of the value check, defaults to the current date.
         :return: None
         """
         count = self.session.query(ValueCheck).count()
@@ -233,13 +233,13 @@ class PortfolioTrackerApp(App):
 
         for entry in entries:
             total_initial_investment += entry.investment
-            crypto_quantities.setdefault(entry.coin_id, 0)
-            crypto_quantities[entry.coin_id] += entry.quantity
+            crypto_quantities.setdefault(entry.crypto_id, 0)
+            crypto_quantities[entry.crypto_id] += entry.quantity
         for crypto_id in crypto_quantities:
-            crypto_price = self.session.query(CryptoPrice).filter(CryptoPrice.crypto_id == crypto_id and date == date)
+            crypto_price = self.session.query(CryptoPrice).filter(CryptoPrice.crypto_id == crypto_id and timestamp == timestamp)
             if crypto_price.count() == 0:
                 # Price defaults to 100, should be an API call
-                current_price = CryptoPrice(crypto_id=crypto_id, date=date, price=100)
+                current_price = CryptoPrice(crypto_id=crypto_id, timestamp=timestamp, price=100)
                 self.session.add(current_price)
                 self.session.commit()
                 total_value += current_price.price * crypto_quantities[crypto_id] / 100
@@ -248,10 +248,10 @@ class PortfolioTrackerApp(App):
 
         previous_value = total_initial_investment if is_first_value_check else previous_value_check.total_value
         percentage_change = 100 * (total_value - previous_value) / abs(previous_value) if previous_value != 0 else 0
-        value_check = ValueCheck(date=date, total_value=total_value, percentage_change=percentage_change)
+        value_check = ValueCheck(date=timestamp, total_value=total_value, percentage_change=percentage_change)
         self.session.add(value_check)
         self.session.commit()
-        self.portfolio_report_date = str(date)
+        self.portfolio_report_date = str(timestamp)
         self.portfolio_report_total = total_value
         self.portfolio_report_previous_date = str(
             previous_value_check.date) if previous_value_check is not None else 'N/A'
