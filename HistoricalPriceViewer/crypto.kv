@@ -29,7 +29,7 @@
     orientation: 'horizontal'
 
     Button:
-        text: '[' + root.crypto_code + '] ' + root.crypto_name
+        text: '[' + root.crypto_symbol + '] ' + root.crypto_name
         background_color: (0.25, 0.25, 0.25)
         color: (1.0, 1.0, 1.0)
         size_hint: (0.5, 1)
@@ -38,7 +38,7 @@
         halign: 'left'
         valign: 'middle'
         on_press:
-            app.select_crypto(root.crypto_code)
+            app.select_crypto(root.crypto_symbol)
             app.root.current = 'view_history_screen'
 
     Text:

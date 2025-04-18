@@ -59,8 +59,8 @@ class CryptoWatchlistScreen(Screen):
     pass
 
 
-class SelectcryptoBox(BoxLayout):
-    crypto_id = StringProperty()
+class SelectCryptoBox(BoxLayout):
+    crypto_symbol = StringProperty()
     crypto_name = StringProperty()
     crypto_value = StringProperty()
     crypto_percent_change = StringProperty()
@@ -108,7 +108,7 @@ class CryptoApp(App):
         list_box.searched_cryptos_list = []
         try:
             for i in range(self.session.query(Crypto).count()):
-                current_id = i + 1
+                current_id = self.session.query(Crypto)[i].crypto_id
                 crypto = self.session.query(Crypto).filter(
                     Crypto.crypto_id == current_id).one()  # get crypto with that matches the id
                 list_box.searched_cryptos_list.append(
@@ -120,7 +120,7 @@ class CryptoApp(App):
             print("\nError: Database not found. Ensure authority is set to \'localhost\' on line 80. Exiting program.")
             sys.exit(1)
         screen = self.root.get_screen('select_crypto_screen')
-        screen.ids.cryptos_list_boxlayoutlist_boxlayout.clear_widgets()  # clear the old list
+        screen.ids.cryptos_list_boxlayout.clear_widgets()  # clear the old list
         screen.ids.select_crypto_text_input.text = ''
         self.display_cryptos(list_box, screen)
 
@@ -129,13 +129,13 @@ class CryptoApp(App):
             for i in range(5):
                 (symbol, name, value, percent_change) = list_box.searched_cryptos_list[i]  # retrieve values
                 screen.ids.cryptos_list_boxlayout.add_widget(
-                    SelectcryptoBox(crypto_code=symbol, crypto_name=name, crypto_value=value,
+                    SelectCryptoBox(crypto_symbol=symbol, crypto_name=name, crypto_value=value,
                                   crypto_percent_change=percent_change))  # display values
         elif 0 < len(list_box.searched_cryptos_list) <= 4:
             for i in range(len(list_box.searched_cryptos_list)):
                 (symbol, name, value, percent_change) = list_box.searched_cryptos_list[i]  # retrieve values
                 screen.ids.cryptos_list_boxlayout.add_widget(
-                    SelectcryptoBox(crypto_code=symbol, crypto_name=name, crypto_value=value,
+                    SelectCryptoBox(crypto_symbol=symbol, crypto_name=name, crypto_value=value,
                                   crypto_percent_change=percent_change))  # display values
         elif len(list_box.searched_cryptos_list) == 0:  # if no cryptos match the search query
             screen.ids.cryptos_list_boxlayout.add_widget(  # notify user no results were found
@@ -154,8 +154,8 @@ class CryptoApp(App):
             self.populate_list()  # populate the list with default values
         else:
             for i in range(self.session.query(Crypto).count()):
-                current_id = i + 1
-                crypto = self.session.query(crypto).filter(crypto.crypto_id == current_id).one()  # retrieve crypto
+                current_id = self.session.query(Crypto)[i]
+                crypto = self.session.query(Crypto).filter(Crypto.crypto_id == current_id).one()  # retrieve crypto
 
                 if search_query in crypto.symbol.lower().strip() or search_query in crypto.name.lower().strip():  # check if crypto matches the search query
                     list_box.searched_cryptos_list.append(
@@ -219,7 +219,7 @@ class CryptoApp(App):
                     (symbol, name, value, percent_change) = list_box.searched_cryptos_list[
                         index - 5 + i]  # retrieve values
                     screen.ids.cryptos_list_boxlayout.add_widget(
-                        SelectcryptoBox(crypto_code=symbol, crypto_name=name, crypto_value=value,
+                        SelectCryptoBox(crypto_code=symbol, crypto_name=name, crypto_value=value,
                                       crypto_percent_change=percent_change))  # display crypto
 
     def move_list_forward(self):
@@ -240,7 +240,7 @@ class CryptoApp(App):
                     (symbol, name, value, percent_change) = list_box.searched_cryptos_list[
                         i + index + 1]  # retrieve values
                     screen.ids.cryptos_list_boxlayout.add_widget(
-                        SelectcryptoBox(crypto_code=symbol, crypto_name=name, crypto_value=value,
+                        SelectCryptoBox(crypto_code=symbol, crypto_name=name, crypto_value=value,
                                       crypto_percent_change=percent_change))  # display crypto
             elif index != len(list_box.searched_cryptos_list) - 1:  # if there is at least 1 crypto left
                 screen.ids.cryptos_list_boxlayout.clear_widgets()  # remove all the rows
@@ -248,7 +248,7 @@ class CryptoApp(App):
                     (symbol, name, value, percent_change) = list_box.searched_cryptos_list[
                         i + index + 1]  # retrieve values
                     screen.ids.cryptos_list_boxlayout.add_widget(
-                        SelectcryptoBox(crypto_code=symbol, crypto_name=name, crypto_value=value,
+                        SelectCryptoBox(crypto_code=symbol, crypto_name=name, crypto_value=value,
                                       crypto_percent_change=percent_change))  # display crypto
 
     def select_crypto(self, symbol):
