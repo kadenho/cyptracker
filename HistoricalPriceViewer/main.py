@@ -11,7 +11,7 @@ from kivy.uix.screenmanager import ScreenManager, Screen, NoTransition
 from matplotlib.dates import AutoDateLocator, ConciseDateFormatter
 
 from Tokenstaller.cryptos import CryptoDatabase, Crypto, CryptoPrice
-from kivy_garden.matplotlib.mackend_kivyagg import FigureCanvasKivyAgg
+from kivy_garden.matplotlib.backend_kivyagg import FigureCanvasKivyAgg
 from pycoingecko import CoinGeckoAPI
 
 coin_gecko_api = CoinGeckoAPI()
