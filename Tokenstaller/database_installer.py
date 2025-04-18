@@ -39,8 +39,8 @@ def main():
         crypto_database.ensure_tables_exist()
         print('Tables created.')
         session = crypto_database.create_session()
-        add_starter_data(session)
-        session.commit()
+       # add_starter_data(session)
+       # session.commit()
         print('Records created.')
     except SQLAlchemyError as exception:
         print('Database setup failed!', file=stderr)

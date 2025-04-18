@@ -1,0 +1,258 @@
+<Text>:
+    color: (0.0, 0.0, 0.0)
+    size_hint: (1, 1)
+    text_size: self.width, None
+    halign: 'center'
+    valign: 'middle'
+
+<FormattedButton>
+    background_color: (0.25, 0.25, 0.25)
+    color: (1.0, 1.0, 1.0)
+    size_hint: (1, 1)
+    text_size: self.width, None
+    height: self.texture_size[1]
+    halign: 'center'
+    valign: 'middle'
+
+<ScreenBoxLayout>
+    canvas.before:
+        Color:
+            rgba: (0.95, 0.95, 0.95, 1.0)
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+<BackButton>
+    size_hint: (0.25,0.1)
+
+<SelectCoinBox>
+    orientation: 'horizontal'
+
+    Button:
+        text: '[' + root.coin_code + '] ' + root.coin_name
+        background_color: (0.25, 0.25, 0.25)
+        color: (1.0, 1.0, 1.0)
+        size_hint: (0.5, 1)
+        text_size: self.width, None
+        height: self.texture_size[1]
+        halign: 'left'
+        valign: 'middle'
+        on_press:
+            app.select_coin(root.coin_code)
+            app.root.current = 'view_history_screen'
+
+    Text:
+        text: 'Value: $' + root.coin_value
+        font_size: sp(12)
+        size_hint: (0.25, 1)
+
+    Text:
+        text: 'Change: ' + root.coin_percent_change + '%'
+        font_size: sp(12)
+        size_hint: (0.25, 1)
+
+<HomeScreen>
+
+    ScreenBoxLayout:
+        orientation: 'vertical'
+
+        Text:
+            text: 'CryptoScam'
+            font_size: sp(75)
+            font_name: 'Roboto-Bold'
+
+        BoxLayout:
+            orientation: 'horizontal'
+
+            FormattedButton:
+                id: portfolio_tracker_button
+                text: 'Portfolio Tracker'
+                on_press:
+                    root.manager.current = 'portfolio_tracker_screen'
+
+            FormattedButton:
+                id: top_gainers_and_losers_button
+                text: 'Top Gainers & Losers'
+                on_press:
+                    root.manager.current = 'top_gainers_and_losers_screen'
+
+        BoxLayout:
+            orientation: 'horizontal'
+
+            FormattedButton:
+                id: historical_price_viewer_button
+                text: 'Historical Price Viewer'
+                on_press:
+                    root.manager.current = 'select_coin_screen'
+                    app.populate_list()
+
+            FormattedButton:
+                id: crypto_watchlist_button
+                text: 'Crypto Watchlist'
+                on_press:
+                    root.manager.current = 'crypto_watchlist_screen'
+
+<PortfolioTrackerScreen>
+
+    ScreenBoxLayout:
+        orientation: 'vertical'
+
+        BackButton:
+            id: portfolio_tracker_home_button
+            text: 'Home'
+            on_press:
+                root.manager.current = 'home_screen'
+
+        BoxLayout:
+            orientation: 'vertical'
+
+            Text:
+                text: 'Portfolio Tracker WIP'
+                font_size: sp(50)
+                font_name: 'Roboto-Bold'
+
+<TopGainersAndLosersScreen>
+
+    ScreenBoxLayout:
+        orientation: 'vertical'
+
+        BackButton:
+            id: top_gainers_and_losers_home_button
+            text: 'Home'
+            on_press:
+                root.manager.current = 'home_screen'
+
+        BoxLayout:
+            orientation: 'vertical'
+
+            Text:
+                text: 'Top Gainers & Losers WIP'
+                font_size: sp(50)
+                font_name: 'Roboto-Bold'
+
+<SelectCoinScreen>
+
+    ScreenBoxLayout:
+        orientation: 'vertical'
+
+        BackButton:
+            id: select_coin_screen_home_button
+            text: 'Home'
+            on_press:
+                root.manager.current = 'home_screen'
+
+        BoxLayout:
+            orientation: 'vertical'
+
+            Text:
+                text: 'Historical Price Viewer'
+                font_size: sp(40)
+                font_name: 'Roboto-Bold'
+
+            BoxLayout:
+                orientation: 'horizontal'
+
+                Widget:
+                    orientation: 'vertical'
+                    size_hint: (0.25, 1)
+
+                TextInput:
+                    id: select_coin_text_input
+                    multiline: False
+                    size_hint: (0.5, 0.5)
+
+                Button:
+                    id: select_coin_enter_button
+                    text: 'Search'
+                    background_color: (0.25, 0.25, 0.25)
+                    color: (1.0, 1.0, 1.0)
+                    text_size: self.width, None
+                    height: self.texture_size[1]
+                    halign: 'center'
+                    valign: 'middle'
+                    size_hint: (0.5,0.5)
+                    on_press:
+                        app.repopulate_list()
+
+                Widget:
+                    orientation: 'vertical'
+                    size_hint: (0.25, 1)
+
+        BoxLayout:
+            id: coins_list_boxlayout
+            orientation: 'vertical'
+
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint: (1, 0.1)
+
+            FormattedButton:
+                id: select_coin_list_back
+                text: 'Back'
+                on_press:
+                    app.move_list_back()
+
+            Widget:
+                size_hint: (1.5, 1)
+
+            FormattedButton:
+                id: select_coin_list_next
+                text: 'Next'
+                on_press:
+                    app.move_list_forward()
+
+<ViewHistoryScreen>
+
+    ScreenBoxLayout:
+        orientation: 'vertical'
+
+        BackButton:
+            id: view_history_back_button
+            text: 'Back'
+            on_press:
+                app.populate_list()
+                root.manager.current = 'select_coin_screen'
+
+        BoxLayout:
+            orientation: 'vertical'
+
+            BoxLayout:
+                orientation: 'horizontal'
+
+                FormattedButton:
+                    text: '30 Day Graph'
+                    on_press:
+                        app.display_month_chart()
+
+                FormattedButton:
+                    text: '7 Day Graph'
+                    on_press:
+                        app.display_week_chart()
+
+                FormattedButton:
+                    text: '1 Day Graph'
+                    on_press:
+                        app.display_day_chart()
+            BoxLayout:
+                size_hint: (1, 2)
+                orientation: 'vertical'
+                id: chart_box
+
+
+<CryptoWatchlistScreen>
+    ScreenBoxLayout:
+        orientation: 'vertical'
+
+        BackButton:
+            id: crypto_watchlist_home_button
+            text: 'Home'
+            on_press:
+                root.manager.current = 'home_screen'
+
+        BoxLayout:
+            orientation: 'vertical'
+
+            Text:
+                text: 'Top Gainers & Losers WIP'
+                font_size: sp(50)
+                font_name: 'Roboto-Bold'

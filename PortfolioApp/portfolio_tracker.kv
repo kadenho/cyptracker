@@ -1,0 +1,359 @@
+#:import Factory kivy.factory.Factory
+#:import SwapTransition kivy.uix.screenmanager.SwapTransition
+#:import SlideTransition kivy.uix.screenmanager.SlideTransition
+
+ScreenManager:
+
+    Screen:
+        name: 'Menu'
+
+        Label:
+            text: app.title_text
+            color: (0, 0, 0, 1)
+            pos_hint: {'center': (0.5, 0.8)}
+            font_size: 36
+            text_size: self.size
+            halign: 'center'
+            valign: 'middle'
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: (1.0,0.8)
+            pos_hint: {'center': (0.5,0.4)}
+            padding: (0, 100, 0, 50)
+            spacing: 50
+
+            CustomButton:
+                text: 'Add New Cryptocurrency'
+                text_color: (0.8, 0.8, 0.8, 1)
+                size_hint_x: 0.8
+                pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
+                on_press:
+                    root.transition.direction =  'up'
+                    root.current = 'New Cryptocurrency'
+
+
+            CustomButton:
+                text: 'Add New Portfolio Entry'
+                text_color: (0.8, 0.8, 0.8, 1)
+                size_hint_x: 0.8
+                pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
+                on_press:
+                    root.transition.direction = 'right'
+                    root.current = 'New Portfolio Entry'
+
+            CustomButton:
+                text: 'Check Portfolio Value'
+                text_color: (0.8, 0.8, 0.8, 1)
+                size_hint_x: 0.8
+                pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
+                on_press:
+                    root.transition.direction = 'down'
+                    root.current = 'Check Portfolio'
+
+            CustomButton:
+                text: 'Change Color'
+                text_color: (0.8, 0.8, 0.8, 1)
+                size_hint_x: 0.8
+                pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
+                on_press:
+                    root.transition.direction = 'right'
+                    root.current = 'Change Color'
+
+    Screen:
+        name: 'New Cryptocurrency'
+
+        Label:
+            text: 'New Cryptocurrency'
+            pos_hint: {'center': (0.5, 0.9)}
+            font_size: 24
+            text_size: self.size
+            halign: 'center'
+            valign: 'middle'
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: (1,0.8)
+            pos_hint: {'center': (0.5,0.4)}
+            padding: (0, 0, 0, 50)
+            spacing: 20
+
+            Label:
+                text: 'Please add a new cryptocurrency to the database.'
+                pos_hint: {'center': (0.5, 0.5)}
+                text_size: self.size
+                halign: 'center'
+                valign: 'middle'
+            Label:
+                text: 'Name'
+                text_size: self.size
+                halign: 'center'
+                valign: 'middle'
+
+            TextInput:
+                id: crypto_name
+                hint_text: 'Bitcoin'
+                size_hint_x: 0.8
+                pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
+
+            Label:
+                text: 'Symbol'
+                text_size: self.size
+                halign: 'center'
+                valign: 'middle'
+
+            TextInput:
+                id: crypto_symbol
+                hint_text: 'btc'
+                size_hint_x: 0.8
+                pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
+
+            CustomButton:
+                text: 'Add Cryptocurrency'
+                size_hint_x: 0.5
+                pos_hint: {'x': 0.25}
+                on_press:
+                    app.add_crypto(name=root.ids.crypto_name.text, symbol=root.ids.crypto_symbol.text)
+
+            CustomButton:
+                text: 'Return to Menu'
+                pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
+                size_hint_x: 0.75
+                on_press:
+                    root.transition.direction =  'down'
+                    root.current = 'Menu'
+
+    Screen:
+        name: 'New Portfolio Entry'
+
+        Label:
+            text: 'New Portfolio Entry'
+            pos_hint: {'center': (0.5, 0.9)}
+            size_hint: (1.0,0.1)
+            font_size: 24
+            text_size: self.size
+            halign: 'center'
+            valign: 'middle'
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: (1,0.8)
+            pos_hint: {'center': (0.5,0.4)}
+            padding: (0, 0, 0, 0)
+            spacing: 20
+
+            Label:
+                text: 'Please add a new portfolio entry to the database.'
+                text_size: self.size
+                halign: 'center'
+                valign: 'middle'
+
+            Spinner:
+                id: spinner_crypto_id
+                text: 'Crypto ID'
+                values: app.crypto_ids
+                size_hint: (0.5,1.0)
+                pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
+
+            Label:
+                text: 'Date Purchased'
+                text_size: self.size
+                halign: 'center'
+                valign: 'middle'
+
+            TextInput:
+                id: date_text
+                hint_text: 'YYYY-MM-DD'
+                size_hint_x: 0.8
+                pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
+
+            Label:
+                text: 'Quantity Purchased'
+                text_size: self.size
+                halign: 'center'
+                valign: 'middle'
+
+            TextInput:
+                id: quantity_text
+                input_filter: 'int'
+                hint_text: '1'
+                size_hint_x: 0.8
+                pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
+
+            CustomButton:
+                text: 'Add Portfolio Entry'
+                size_hint_x: 0.5
+                pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
+                on_press:
+                    app.add_portfolio_entry(root.ids.spinner_crypto_id.text, root.ids.date_text.text, root.ids.quantity_text.text)
+                    quantity_text = ''
+                    date_text = ''
+
+            CustomButton:
+                text: 'Return to Menu'
+                pos_hint: {'x': 0.125}
+                size_hint_x: 0.75
+                on_press:
+                    root.transition.direction =  'left'
+                    root.current = 'Menu'
+
+    Screen:
+        name: 'Check Portfolio'
+        on_enter:
+            app.add_value_check()
+        Label:
+            text: 'Portfolio Summary'
+            pos_hint: {'center': (0.5, 0.9)}
+            font_size: 24
+            text_size: self.size
+            halign: 'center'
+            valign: 'middle'
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: (1,0.8)
+            pos_hint: {'center': (0.5,0.4)}
+            padding: (0, 0, 0, 50)
+            spacing: 20
+            Label:
+                text: 'Date of Report'
+                text_size: self.size
+                halign: 'center'
+                valign: 'middle'
+
+            Label:
+                id: report_date
+                text: f'{app.portfolio_report_date}'
+                bold: True
+                text_size: self.size
+                halign: 'center'
+                valign: 'middle'
+
+            Label:
+                text: 'Total Value'
+                text_size: self.size
+                halign: 'center'
+                valign: 'middle'
+
+            Label:
+                id: total_value
+                text: f'${app.portfolio_report_total:,.2f}'
+                text_size: self.size
+                bold: True
+                color: app.text_color_from_value(self,-100000,100000)
+                outline_width: 1
+                halign: 'center'
+                valign: 'middle'
+
+            Label:
+                text: 'Date of Last Report'
+                text_size: self.size
+                halign: 'center'
+                valign: 'middle'
+
+            Label:
+                id: last_report_date
+                text: f'{app.portfolio_report_previous_date}'
+                text_size: self.size
+                bold: True
+                halign: 'center'
+                valign: 'middle'
+
+            Label:
+                text: 'Change From Last'
+                text_size: self.size
+                halign: 'center'
+                valign: 'middle'
+
+            Label:
+                id: percent_change
+                text: f'{app.portfolio_report_percent_change:,}%'
+                color: app.text_color_from_value(self, -100, 100)
+                text_size: self.size
+                outline_width: 1
+                bold: True
+                halign: 'center'
+                valign: 'middle'
+
+            CustomButton:
+                text: 'Return to Menu'
+                pos_hint: {'x': 0.125}
+                size_hint_x: 0.75
+                on_press:
+                    root.transition.direction =  'up'
+                    root.current = 'Menu'
+
+    Screen
+        name: 'Change Color'
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: (1,0.25)
+            pos_hint: {'center': (0.5,0.4)}
+            padding: (0, 0, 0, 50)
+            spacing: 20
+
+            Spinner:
+                id: spinner_color
+                text: 'Color Property'
+                values: ['Background', 'Outline', 'Text', 'Button']
+                size_hint: (0.5,1.0)
+                pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
+
+            TextInput:
+                id: color_input
+                hint_text: '0.75, 0.25, 0.5, 1.0'
+                write_tab: False
+                multiline: False
+                on_text_validate:
+                    app.change_color(root.ids.spinner_color.text, self.text)
+
+        CustomButton:
+            text: 'Return to Menu'
+            pos_hint: {'center': (0.5,0.125)}
+            size_hint: (0.5, 0.125)
+            on_press:
+                root.transition.direction =  'left'
+                root.current = 'Menu'
+
+
+<Button>
+    canvas.before:
+        Color:
+            rgb: self.background_color
+        SmoothRoundedRectangle:
+            size: self.size
+            pos: self.pos
+            radius: [18]
+    background_color: app.button_color
+    text_size: self.size
+    halign: 'center'
+    valign: 'middle'
+
+<SpinnerOption>
+    canvas.before:
+        Color:
+            rgba: .5, .5, .5, 1
+        SmoothRoundedRectangle:
+            width: 2
+            rectangle: self.x, self.y, self.width, self.height
+    background_color: app.button_color
+
+<TextInput>
+    write_tab: False
+    multiline: False
+
+<Screen>
+    canvas.before:
+        Color:
+            rgba: app.background_color
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+<Label>
+    font_name: 'ARLRDBD'
+    font_size: 24
+    outline_width: 2
+    outline_color: app.outline_color
+    color: app.text_color
