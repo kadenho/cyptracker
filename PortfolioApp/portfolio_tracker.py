@@ -10,9 +10,9 @@ from kivy.uix.popup import Popup
 from kivy.core.window import Window
 from sqlalchemy.exc import SQLAlchemyError
 
-from source.Tokenstaller.cryptos import CryptoDatabase, Crypto, PortfolioEntry, CryptoPrice
+from Tokenstaller.cryptos import CryptoDatabase, Crypto, PortfolioEntry, CryptoPrice
 
-from source.Tokenstaller.cryptos import ValueCheck
+from Tokenstaller.cryptos import ValueCheck
 
 
 class PortfolioTrackerApp(App):
@@ -62,7 +62,7 @@ class PortfolioTrackerApp(App):
         >>> color = [1.0, 1.0, 0.0, 1]
         >>> label = Label(text='-25',color=color)
         >>> app = PortfolioTrackerApp()
-        >>> app.text_color_from_value('-25', -100, 100, color)
+        >>> app.text_color_from_value(label, -100, 100)
         [1.0, 0.75, 0.0, 1.0]
         """
         # Have to copy text_color so that it is not carried over through the default parameter
