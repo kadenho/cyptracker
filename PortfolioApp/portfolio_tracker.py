@@ -17,7 +17,7 @@ from source.Tokenstaller.cryptos import ValueCheck
 
 class PortfolioTrackerApp(App):
     kv_file = 'portfolio_tracker.kv'
-    title_text = StringProperty('CrypTracker Portfolio App')
+    title_text = StringProperty('PortfolioApp Portfolio App')
 
     background_color = ColorProperty([0.0, 0.0, 0.0, 1.0])
     text_color = ColorProperty([0.0, 0.0, 0.0, 1.0])
