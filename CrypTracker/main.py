@@ -67,6 +67,12 @@ def find_most_recent_timestamp(values_list):
     return most_recent_value  # return most recent value
 
 class CrypTrackerApp(App):
+    def __init__(self, **kwargs):
+        super(CrypTrackerApp, self).__init__(**kwargs)
+        password = input('What is the password to your MySQL server?')
+        url = CryptoDatabase.construct_mysql_url('localhost', 3306, 'cryptracker', 'root', password)
+        self.crypto_database = CryptoDatabase(url)
+        self.session = self.crypto_database.create_session()
     Window.size = (540, 960)
     def build(self):
         inspector.create_inspector(Window, self)
