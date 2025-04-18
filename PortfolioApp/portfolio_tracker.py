@@ -34,7 +34,8 @@ class PortfolioTrackerApp(App):
 
     def __init__(self, **kwargs):
         super(PortfolioTrackerApp, self).__init__(**kwargs)
-        url = CryptoDatabase.construct_mysql_url('localhost', 3306, 'cryptos', 'root', 'weak')
+        password = input('What is the password to your MySQL server?')
+        url = CryptoDatabase.construct_mysql_url('localhost', 3306, 'cryptos', 'root', password)
         self.crypto_database = CryptoDatabase(url)
         self.session = self.crypto_database.create_session()
 
@@ -118,7 +119,7 @@ class PortfolioTrackerApp(App):
             cryptos = self.session.query(Crypto)
             crypto_count = cryptos.count()
             for i in range(crypto_count):
-                ids.append(cryptos[i].crypto_id)
+                ids.append(cryptos[i].coin_id)
         except SQLAlchemyError:
             self.title_text = 'Database Error, make sure your port, username, and password are correct'
 
@@ -188,7 +189,7 @@ class PortfolioTrackerApp(App):
         :param quantity: Quantity of the crypto bought at that date
         :return: None
         """
-        does_price_match = CryptoPrice.crypto_id == crypto_id and CryptoPrice.date == date
+        does_price_match = CryptoPrice.crypto_id == crypto_id and CryptoPrice.timestamp == date
         if len(quantity) == 0:
             self.display_popup('Empty Data', 'Please enter in a quantity.', 'New Portfolio Entry')
             return
@@ -232,8 +233,8 @@ class PortfolioTrackerApp(App):
 
         for entry in entries:
             total_initial_investment += entry.investment
-            crypto_quantities.setdefault(entry.crypto_id, 0)
-            crypto_quantities[entry.crypto_id] += entry.quantity
+            crypto_quantities.setdefault(entry.coin_id, 0)
+            crypto_quantities[entry.coin_id] += entry.quantity
         for crypto_id in crypto_quantities:
             crypto_price = self.session.query(CryptoPrice).filter(CryptoPrice.crypto_id == crypto_id and date == date)
             if crypto_price.count() == 0:
@@ -253,7 +254,7 @@ class PortfolioTrackerApp(App):
         self.portfolio_report_date = str(date)
         self.portfolio_report_total = total_value
         self.portfolio_report_previous_date = str(
-            previous_value_check.date) if previous_value_check.date != date else 'N/A'
+            previous_value_check.date) if previous_value_check is not None else 'N/A'
         self.portfolio_report_percent_change = round(percentage_change)
 
 

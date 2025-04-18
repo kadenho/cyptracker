@@ -25,11 +25,11 @@
 <BackButton>
     size_hint: (0.25,0.1)
 
-<SelectCoinBox>
+<SelectcryptoBox>
     orientation: 'horizontal'
 
     Button:
-        text: '[' + root.coin_code + '] ' + root.coin_name
+        text: '[' + root.crypto_code + '] ' + root.crypto_name
         background_color: (0.25, 0.25, 0.25)
         color: (1.0, 1.0, 1.0)
         size_hint: (0.5, 1)
@@ -38,16 +38,16 @@
         halign: 'left'
         valign: 'middle'
         on_press:
-            app.select_coin(root.coin_code)
+            app.select_crypto(root.crypto_code)
             app.root.current = 'view_history_screen'
 
     Text:
-        text: 'Value: $' + root.coin_value
+        text: 'Value: $' + root.crypto_value
         font_size: sp(12)
         size_hint: (0.25, 1)
 
     Text:
-        text: 'Change: ' + root.coin_percent_change + '%'
+        text: 'Change: ' + root.crypto_percent_change + '%'
         font_size: sp(12)
         size_hint: (0.25, 1)
 
@@ -83,7 +83,7 @@
                 id: historical_price_viewer_button
                 text: 'Historical Price Viewer'
                 on_press:
-                    root.manager.current = 'select_coin_screen'
+                    root.manager.current = 'select_crypto_screen'
                     app.populate_list()
 
             FormattedButton:
@@ -130,13 +130,13 @@
                 font_size: sp(50)
                 font_name: 'Roboto-Bold'
 
-<SelectCoinScreen>
+<SelectcryptoScreen>
 
     ScreenBoxLayout:
         orientation: 'vertical'
 
         BackButton:
-            id: select_coin_screen_home_button
+            id: select_crypto_screen_home_button
             text: 'Home'
             on_press:
                 root.manager.current = 'home_screen'
@@ -157,12 +157,12 @@
                     size_hint: (0.25, 1)
 
                 TextInput:
-                    id: select_coin_text_input
+                    id: select_crypto_text_input
                     multiline: False
                     size_hint: (0.5, 0.5)
 
                 Button:
-                    id: select_coin_enter_button
+                    id: select_crypto_enter_button
                     text: 'Search'
                     background_color: (0.25, 0.25, 0.25)
                     color: (1.0, 1.0, 1.0)
@@ -179,7 +179,7 @@
                     size_hint: (0.25, 1)
 
         BoxLayout:
-            id: coins_list_boxlayout
+            id: cryptos_list_boxlayout
             orientation: 'vertical'
 
         BoxLayout:
@@ -187,7 +187,7 @@
             size_hint: (1, 0.1)
 
             FormattedButton:
-                id: select_coin_list_back
+                id: select_crypto_list_back
                 text: 'Back'
                 on_press:
                     app.move_list_back()
@@ -196,7 +196,7 @@
                 size_hint: (1.5, 1)
 
             FormattedButton:
-                id: select_coin_list_next
+                id: select_crypto_list_next
                 text: 'Next'
                 on_press:
                     app.move_list_forward()
@@ -211,7 +211,7 @@
             text: 'Back'
             on_press:
                 app.populate_list()
-                root.manager.current = 'select_coin_screen'
+                root.manager.current = 'select_crypto_screen'
 
         BoxLayout:
             orientation: 'vertical'
