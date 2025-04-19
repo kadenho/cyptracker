@@ -57,6 +57,7 @@ class SelectCryptoBox(BoxLayout):
     crypto_percent_change = StringProperty()
     searched_cryptos_list = ListProperty()
     crypto_id = StringProperty()
+
 def find_most_recent_timestamp(values_list):
     """
     Take a list of values and return the most recent value
@@ -128,16 +129,16 @@ class CrypTrackerApp(App):
     def display_cryptos(self, list_box, screen):
         if len(list_box.searched_cryptos_list) >= 5:
             for i in range(5):
-                (symbol, name, value, percent_change) = list_box.searched_cryptos_list[i]  # retrieve values
+                (symbol, name, value, percent_change, crypto_id) = list_box.searched_cryptos_list[i]  # retrieve values
                 screen.ids.cryptos_list_boxlayout.add_widget(
                     SelectCryptoBox(crypto_symbol=symbol, crypto_name=name, crypto_value=value,
-                                  crypto_percent_change=percent_change))  # display values
+                                  crypto_percent_change=percent_change, crypto_id=crypto_id))  # display values
         elif 0 < len(list_box.searched_cryptos_list) <= 4:
             for i in range(len(list_box.searched_cryptos_list)):
-                (symbol, name, value, percent_change) = list_box.searched_cryptos_list[i]  # retrieve values
+                (symbol, name, value, percent_change, crypto_id) = list_box.searched_cryptos_list[i]  # retrieve values
                 screen.ids.cryptos_list_boxlayout.add_widget(
                     SelectCryptoBox(crypto_symbol=symbol, crypto_name=name, crypto_value=value,
-                                  crypto_percent_change=percent_change))  # display values
+                                  crypto_percent_change=percent_change, crypto_id=crypto_id))  # display values
         elif len(list_box.searched_cryptos_list) == 0:  # if no cryptos match the search query
             screen.ids.cryptos_list_boxlayout.add_widget(  # notify user no results were found
                 Text(text='No results found', font_size=50))
@@ -199,7 +200,7 @@ class CrypTrackerApp(App):
                     percent_change = str(
                         round((float(today_price) - float(yesterday_price)) / float(yesterday_price) * 100,
                               2))  # calculate percent change
-        assembled_tuple = (crypto_symbol, crypto_name, today_price, percent_change)  # package data into a tuple
+        assembled_tuple = (crypto_symbol, crypto_name, today_price, percent_change, current_id)  # package data into a tuple
         return assembled_tuple  # return the assembled tuple
 
     def move_list_back(self):
@@ -211,17 +212,17 @@ class CrypTrackerApp(App):
         if list_box.searched_cryptos_list:  # as long as the list exists
             first_box = screen.ids.cryptos_list_boxlayout.children[-1]  # retrieve the first item
             first_tuple = (first_box.crypto_symbol, first_box.crypto_name, first_box.crypto_value,
-                           first_box.crypto_percent_change)  # repackage the data into a tuple
+                           first_box.crypto_percent_change, first_box.crypto_id)  # repackage the data into a tuple
             index = list_box.searched_cryptos_list.index(
                 first_tuple)  # search list for the matching tuple to find the current index
             if index > 4:  # if there are at least 5 widgets preceding to be displayed
                 screen.ids.cryptos_list_boxlayout.clear_widgets()  # clear the widgets
                 for i in range(5):
-                    (symbol, name, value, percent_change) = list_box.searched_cryptos_list[
+                    (symbol, name, value, percent_change, crypto_id) = list_box.searched_cryptos_list[
                         index - 5 + i]  # retrieve values
                     screen.ids.cryptos_list_boxlayout.add_widget(
                         SelectCryptoBox(crypto_symbol=symbol, crypto_name=name, crypto_value=value,
-                                      crypto_percent_change=percent_change))  # display crypto
+                                      crypto_percent_change=percent_change, crypto_id=crypto_id))  # display crypto
 
     def move_list_forward(self):
         """
@@ -232,33 +233,33 @@ class CrypTrackerApp(App):
         if list_box.searched_cryptos_list:
             last_box = screen.ids.cryptos_list_boxlayout.children[0]  # select the last displayed crypto
             last_tuple = (last_box.crypto_symbol, last_box.crypto_name, last_box.crypto_value,
-                          last_box.crypto_percent_change)  # repackage the values into a tuple
+                          last_box.crypto_percent_change, last_box.crypto_id)  # repackage the values into a tuple
 
             index = list_box.searched_cryptos_list.index(last_tuple)  # find the index of that crypto
 
             if index < (len(list_box.searched_cryptos_list) - 5):  # if there are at least 5 cryptos left
                 screen.ids.cryptos_list_boxlayout.clear_widgets()  # remove all the rows
                 for i in range(5):  # for the next 5 cryptos
-                    (symbol, name, value, percent_change) = list_box.searched_cryptos_list[
+                    (symbol, name, value, percent_change, crypto_id) = list_box.searched_cryptos_list[
                         i + index + 1]  # retrieve values
                     screen.ids.cryptos_list_boxlayout.add_widget(
                         SelectCryptoBox(crypto_symbol=symbol, crypto_name=name, crypto_value=value,
-                                      crypto_percent_change=percent_change))  # display crypto
+                                      crypto_percent_change=percent_change, crypto_id=crypto_id))  # display crypto
             elif index != len(list_box.searched_cryptos_list) - 1:  # if there is at least 1 crypto left
                 screen.ids.cryptos_list_boxlayout.clear_widgets()  # remove all the rows
                 for i in range(len(list_box.searched_cryptos_list) - index - 1):  # for the remaining cryptos
-                    (symbol, name, value, percent_change) = list_box.searched_cryptos_list[
+                    (symbol, name, value, percent_change, crypto_id) = list_box.searched_cryptos_list[
                         i + index + 1]  # retrieve values
                     screen.ids.cryptos_list_boxlayout.add_widget(
                         SelectCryptoBox(crypto_symbol=symbol, crypto_name=name, crypto_value=value,
-                                      crypto_percent_change=percent_change))  # display crypto
+                                      crypto_percent_change=percent_change, crypto_id=crypto_id))  # display crypto
 
-    def select_crypto(self, symbol):
+    def select_crypto(self, crypto_id):
         """
         set the values for the show history screen
         """
         try:
-            selected_crypto = self.session.query(Crypto).filter(Crypto.symbol == symbol).one()  # get the crypto selected
+            selected_crypto = self.session.query(Crypto).filter(Crypto.crypto_id == crypto_id).one()  # get the crypto selected
         except sqlalchemy.exc.MultipleResultsFound:
             print("\nError: Multiple results found. Ensure the installer was only ran once.")
             sys.exit(1)
@@ -266,7 +267,7 @@ class CrypTrackerApp(App):
             print("\nError: No results found. Ensure the symbol is correct.")
             sys.exit(1)
         screen = self.root.get_screen('ViewHistoryScreen')
-        screen.symbol = symbol
+        screen.crypto_id = crypto_id
         screen.crypto_name = selected_crypto.name
 
         selected_values = self.session.query(CryptoPrice).filter(
