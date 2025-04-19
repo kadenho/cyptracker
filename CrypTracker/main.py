@@ -156,7 +156,7 @@ class CrypTrackerApp(App):
             self.populate_list()  # populate the list with default values
         else:
             for i in range(self.session.query(Crypto).count()):
-                current_id = self.session.query(Crypto)[i]
+                current_id = self.session.query(Crypto)[i].crypto_id
                 crypto = self.session.query(Crypto).filter(Crypto.crypto_id == current_id).one()  # retrieve crypto
 
                 if search_query in crypto.symbol.lower().strip() or search_query in crypto.name.lower().strip():  # check if crypto matches the search query
