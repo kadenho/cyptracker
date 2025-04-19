@@ -3,12 +3,8 @@ ScreenManager:
     CreateProfileScreen:
     MainDashboardScreen:
     AboutHelpScreen:
-    HistoryHomeScreen:
-    PortfolioTrackerScreen:
-    TopGainersAndLosersScreen:
     SelectCryptoScreen:
     ViewHistoryScreen:
-    CryptoWatchlistScreen:
 
 <UserLoginScreen>:
     name: 'UserLoginScreen'
@@ -213,13 +209,6 @@ ScreenManager:
                 size_hint: (.25, 1)
         Widget:
 
-
-
-
-
-
-
-
 <Text>:
     color: (0.0, 0.0, 0.0)
     size_hint: (1, 1)
@@ -273,85 +262,6 @@ ScreenManager:
         font_size: sp(12)
         size_hint: (0.25, 1)
 
-<HistoryHomeScreen>
-
-    ScreenBoxLayout:
-        orientation: 'vertical'
-
-        Text:
-            text: 'CryptoScam'
-            font_size: sp(75)
-            font_name: 'Roboto-Bold'
-
-        BoxLayout:
-            orientation: 'horizontal'
-
-            FormattedButton:
-                id: portfolio_tracker_button
-                text: 'Portfolio Tracker'
-                on_press:
-                    root.manager.current = 'PortfolioTrackerScreen'
-
-            FormattedButton:
-                id: top_gainers_and_losers_button
-                text: 'Top Gainers & Losers'
-                on_press:
-                    root.manager.current = 'TopGainersAndLosersScreen'
-
-        BoxLayout:
-            orientation: 'horizontal'
-
-            FormattedButton:
-                id: historical_price_viewer_button
-                text: 'Historical Price Viewer'
-                on_press:
-                    root.manager.current = 'SelectCryptoScreen'
-                    app.populate_list()
-
-            FormattedButton:
-                id: crypto_watchlist_button
-                text: 'Crypto Watchlist'
-                on_press:
-                    root.manager.current = 'CryptoWatchlistScreen'
-
-<PortfolioTrackerScreen>
-
-    ScreenBoxLayout:
-        orientation: 'vertical'
-
-        BackButton:
-            id: portfolio_tracker_home_button
-            text: 'Home'
-            on_press:
-                root.manager.current = 'HistoryHomeScreen'
-
-        BoxLayout:
-            orientation: 'vertical'
-
-            Text:
-                text: 'Portfolio Tracker WIP'
-                font_size: sp(50)
-                font_name: 'Roboto-Bold'
-
-<TopGainersAndLosersScreen>
-
-    ScreenBoxLayout:
-        orientation: 'vertical'
-
-        BackButton:
-            id: top_gainers_and_losers_home_button
-            text: 'Home'
-            on_press:
-                root.manager.current = 'HistoryHomeScreen'
-
-        BoxLayout:
-            orientation: 'vertical'
-
-            Text:
-                text: 'Top Gainers & Losers WIP'
-                font_size: sp(50)
-                font_name: 'Roboto-Bold'
-
 <SelectCryptoScreen>
 
     ScreenBoxLayout:
@@ -361,7 +271,7 @@ ScreenManager:
             id: select_crypto_screen_home_button
             text: 'Home'
             on_press:
-                root.manager.current = 'HistoryHomeScreen'
+                root.manager.current = 'MainDashboardScreen'
 
         BoxLayout:
             orientation: 'vertical'
@@ -459,22 +369,3 @@ ScreenManager:
                 size_hint: (1, 2)
                 orientation: 'vertical'
                 id: chart_box
-
-
-<CryptoWatchlistScreen>
-    ScreenBoxLayout:
-        orientation: 'vertical'
-
-        BackButton:
-            id: crypto_watchlist_home_button
-            text: 'Home'
-            on_press:
-                root.manager.current = 'HistoryHomeScreen'
-
-        BoxLayout:
-            orientation: 'vertical'
-
-            Text:
-                text: 'Top Gainers & Losers WIP'
-                font_size: sp(50)
-                font_name: 'Roboto-Bold'

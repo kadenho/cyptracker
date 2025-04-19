@@ -82,12 +82,8 @@ class CrypTrackerApp(App):
         self.sm.add_widget(CreateProfileScreen(name='CreateProfileScreen'))
         self.sm.add_widget(MainDashboardScreen(name='MainDashboardScreen'))
         self.sm.add_widget(AboutHelpScreen(name='AboutHelpScreen'))
-        self.sm.add_widget(HistoryHomeScreen(name='HistoryHomeScreen'))
-        self.sm.add_widget(PortfolioTrackerScreen(name='PortfolioTrackerScreen'))
-        self.sm.add_widget(TopGainersAndLosersScreen(name='TopGainersAndLosersScreen'))
         self.sm.add_widget(SelectCryptoScreen(name='SelectCryptoScreen'))
         self.sm.add_widget(ViewHistoryScreen(name='ViewHistoryScreen'))
-        self.sm.add_widget(CryptoWatchlistScreen(name='CryptoWatchlistScreen'))
         return self.sm
     def on_login_button_press(self):
         self.sm.current = 'MainDashboardScreen'
