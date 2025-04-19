@@ -150,7 +150,9 @@ ScreenManager:
                 id: historical_price_button
                 text: 'Price History'
                 font_size: sp(30)
-                on_press: app.on_historical_price_button_press()
+                on_press:
+                    app.populate_list()
+                    app.on_historical_price_button_press()
             Widget:
                 size_hint: (.25, 1)
         Widget:

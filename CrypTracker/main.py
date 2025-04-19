@@ -96,7 +96,7 @@ class CrypTrackerApp(App):
     def on_create_username_button_press(self):
         self.sm.current = 'UserLoginScreen'
     def on_historical_price_button_press(self):
-        self.sm.current = 'HistoryHomeScreen'
+        self.sm.current = 'SelectCryptoScreen'
     def on_switch_user_button_press(self):
         self.sm.current = 'UserLoginScreen'
     def on_about_help_button_press(self):
