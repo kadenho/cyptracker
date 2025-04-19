@@ -1,6 +1,8 @@
 #:import Factory kivy.factory.Factory
 #:import SwapTransition kivy.uix.screenmanager.SwapTransition
 #:import SlideTransition kivy.uix.screenmanager.SlideTransition
+#:import text_color_from_value portfolio_tracker.text_color_from_value
+#:import popup_update_text_size portfolio_tracker.popup_update_text_size
 
 ScreenManager:
 
@@ -247,7 +249,7 @@ ScreenManager:
                 halign: 'center'
                 valign: 'middle'
                 on_text:
-                    self.color = app.text_color_from_value(self, -100000, 100000)
+                    self.color = text_color_from_value(self, -100000, 100000)
 
             Label:
                 text: 'Date of Last Report'
@@ -279,7 +281,7 @@ ScreenManager:
                 halign: 'center'
                 valign: 'middle'
                 on_text:
-                    self.color = app.text_color_from_value(self, -100, 100)
+                    self.color = text_color_from_value(self, -100, 100)
 
             CustomButton:
                 text: 'Return to Menu'

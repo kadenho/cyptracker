@@ -15,6 +15,65 @@ from Tokenstaller.cryptos import CryptoDatabase, Crypto, PortfolioEntry, CryptoP
 from Tokenstaller.cryptos import ValueCheck
 from pycoingecko import CoinGeckoAPI
 
+def text_color_from_value(label, lower, upper):
+    """
+    Yields an RGBA list for color based on the value of a string (red for negative, green for positive, black for 0)
+    :param label: Label whose text and color will be changed
+    :param lower: The highest value to return pure red [1, 0, 0, 1]
+    :param upper: The lowest value to return pure green [0, 1, 0, 1]
+    :return: RGBA list of colors between 0 and 1
+    >>> import sys
+    >>> from io import StringIO
+    >>> sys.stdin = StringIO('weak')
+    >>> colored_text = Label(text='100',color=[0, 0, 0, 1])
+    >>> test_app = PortfolioTrackerApp()
+    What is the password to your MySQL server?
+    >>> text_color_from_value(colored_text, -100, 100)
+    [0.0, 1.0, 0.0, 1.0]
+    >>> import sys
+    >>> from io import StringIO
+    >>> sys.stdin = StringIO('weak')
+    >>> color = [0.5, 0.0, 0.5, 1]
+    >>> colored_text = Label(text='50',color=color)
+    >>> test_app = PortfolioTrackerApp()
+    What is the password to your MySQL server?
+    >>> text_color_from_value(colored_text, -100, 100)
+    [0.25, 0.5, 0.25, 1.0]
+    >>> import sys
+    >>> from io import StringIO
+    >>> sys.stdin = StringIO('weak')
+    >>> color = [1.0, 1.0, 0.0, 1]
+    >>> colored_text = Label(text='-25',color=color)
+    >>> test_app = PortfolioTrackerApp()
+    What is the password to your MySQL server?
+    >>> text_color_from_value(colored_text, -100, 100)
+    [1.0, 0.75, 0.0, 1.0]
+    """
+    # Have to copy text_color so that it is not carried over through the default parameter
+    text_color = list(label.color)
+    green = [0, 1, 0, 1]
+    red = [1, 0, 0, 1]
+    green_differentials = [green[i] - text_color[i] for i in range(4)]
+    # 0, 1, 0
+    red_differentials = [red[i] - text_color[i] for i in range(4)]
+    # Remove commas, spaces, periods, percentages, and dollar signs
+    value = int(label.text.translate({ord(c): None for c in ', %$.'}))
+    if value > 0:
+        value = min(value, upper)
+        for i in range(4):
+            text_color[i] += (value / upper) * green_differentials[i]
+    if value < 0:
+        value = max(value, lower)
+        for i in range(4):
+            text_color[i] += (value / lower) * red_differentials[i]
+    return text_color
+
+
+def popup_update_text_size(instance):
+    instance.children[0].children[0].children[0].text_size = instance.children[0].children[0].children[0].size
+    return
+
+
 class PortfolioTrackerApp(App):
     kv_file = 'portfolio_tracker.kv'
     title_text = StringProperty('PortfolioApp Portfolio App')
@@ -45,64 +104,12 @@ class PortfolioTrackerApp(App):
 
     def change_screen(self, screen):
         self.root.current = screen
-    def text_color_from_value(self, label, lower, upper):
-        """
-        Yields an RGBA list for color based on the value of a string (red for negative, green for positive, black for 0)
-        :param label: Label whose text and color will be changed
-        :param lower: The highest value to return pure red [1, 0, 0, 1]
-        :param upper: The lowest value to return pure green [0, 1, 0, 1]
-        :return: RGBA list of colors between 0 and 1
-        >>> import sys
-        >>> from io import StringIO
-        >>> sys.stdin = StringIO('weak')
-        >>> label = Label(text='100',color=[0, 0, 0, 1])
-        >>> app = PortfolioTrackerApp()
-        What is the password to your MySQL server?
-        >>> app.text_color_from_value(label, -100, 100)
-        [0.0, 1.0, 0.0, 1.0]
-        >>> import sys
-        >>> from io import StringIO
-        >>> sys.stdin = StringIO('weak')
-        >>> color = [0.5, 0.0, 0.5, 1]
-        >>> label = Label(text='50',color=color)
-        >>> app = PortfolioTrackerApp()
-        What is the password to your MySQL server?
-        >>> app.text_color_from_value(label, -100, 100)
-        [0.25, 0.5, 0.25, 1.0]
-        >>> import sys
-        >>> from io import StringIO
-        >>> sys.stdin = StringIO('weak')
-        >>> color = [1.0, 1.0, 0.0, 1]
-        >>> label = Label(text='-25',color=color)
-        >>> app = PortfolioTrackerApp()
-        What is the password to your MySQL server?
-        >>> app.text_color_from_value(label, -100, 100)
-        [1.0, 0.75, 0.0, 1.0]
-        """
-        # Have to copy text_color so that it is not carried over through the default parameter
-        text_color = list(label.color)
-        green = [0, 1, 0, 1]
-        red = [1, 0, 0, 1]
-        green_differentials = [green[i] - text_color[i] for i in range(4)]
-        # 0, 1, 0
-        red_differentials = [red[i] - text_color[i] for i in range(4)]
-        # Remove commas, spaces, periods, percentages, and dollar signs
-        value = int(label.text.translate({ord(c): None for c in ', %$.'}))
-        if value > 0:
-            value = min(value, upper)
-            for i in range(4):
-                text_color[i] += (value / upper) * green_differentials[i]
-        if value < 0:
-            value = max(value, lower)
-            for i in range(4):
-                text_color[i] += (value / lower) * red_differentials[i]
-        return text_color
 
     def change_color(self, variable, color):
         if '.' not in color:
-            color = re.findall('\d+', color)
+            color = re.findall('d+', color)
         else:
-            color = re.findall('\d*\.\d+', color)
+            color = re.findall('d*.d+', color)
         while len(color) < 4:
             color.append(1.0)
         color = [float(color[i]) for i in range(4)]
@@ -152,11 +159,7 @@ class PortfolioTrackerApp(App):
         popup.children[0].children[2].outline_width = 0
         popup.open()
         popup.bind(on_dismiss=lambda instance: self.change_screen(next_screen))
-        popup.bind(on_open=lambda instance: self.popup_update_text_size(instance))
-        return
-
-    def popup_update_text_size(self, instance):
-        instance.children[0].children[0].children[0].text_size = instance.children[0].children[0].children[0].size
+        popup.bind(on_open=lambda instance: popup_update_text_size(instance))
         return
 
     def add_crypto(self, name, symbol):
@@ -174,12 +177,18 @@ class PortfolioTrackerApp(App):
         to a list so it can access each dictionary fitting the criteria.
         Result is a list of dictionaries with keys {'id':, 'name':, 'symbol':}
         that have the same name and symbol as the arguments to this method,
-        then you take the value of the dictionary's id.'''
+        then you take the value of the dictionary's id.
+        Error handled for case of there being no crypto that fits.'''
 
-        id = list(filter(lambda dictionary: dictionary["symbol"] == symbol\
-                    and dictionary["name"] == name, coin_gecko_api.get_coins_list()))[0]['id']
-
-        crypto = Crypto(name=name, symbol=symbol, crypto_id=id)
+        try:
+            added_crypto_id = list(filter(lambda dictionary: dictionary["symbol"] == symbol\
+                        and dictionary["name"] == name, coin_gecko_api.get_coins_list()))[0]['id']
+        except IndexError:
+                popup_title = 'Crypto not found'
+                popup_message = f'Crypto with name {name} and symbol {symbol} not found.'
+                self.display_popup(popup_title, popup_message, 'Add Portfolio Entry')
+                return
+        crypto = Crypto(name=name, symbol=symbol, crypto_id=added_crypto_id)
         if not (len(name) > 0 and len(symbol) > 0):
             self.display_popup('Empty Data', 'Please enter data for all fields.', 'New Cryptocurrency')
             return
@@ -315,6 +324,3 @@ if __name__ == '__main__':
         app.run()
     except SQLAlchemyError as e:
         print(f'There was a database error: {e}')
-        PortfolioTrackerApp.display_popup(app, title='Database Error',
-                                          text=f'There was a problem connecting to the server: {e}',
-                                          next_screen='Menu')
