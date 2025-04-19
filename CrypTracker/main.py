@@ -210,7 +210,7 @@ class CrypTrackerApp(App):
         list_box = screen.ids.cryptos_list_boxlayout  # retrieve list
         if list_box.searched_cryptos_list:  # as long as the list exists
             first_box = screen.ids.cryptos_list_boxlayout.children[-1]  # retrieve the first item
-            first_tuple = (first_box.crypto_id, first_box.crypto_name, first_box.crypto_value,
+            first_tuple = (first_box.crypto_symbol, first_box.crypto_name, first_box.crypto_value,
                            first_box.crypto_percent_change)  # repackage the data into a tuple
             index = list_box.searched_cryptos_list.index(
                 first_tuple)  # search list for the matching tuple to find the current index
@@ -220,7 +220,7 @@ class CrypTrackerApp(App):
                     (symbol, name, value, percent_change) = list_box.searched_cryptos_list[
                         index - 5 + i]  # retrieve values
                     screen.ids.cryptos_list_boxlayout.add_widget(
-                        SelectCryptoBox(crypto_code=symbol, crypto_name=name, crypto_value=value,
+                        SelectCryptoBox(crypto_symbol=symbol, crypto_name=name, crypto_value=value,
                                       crypto_percent_change=percent_change))  # display crypto
 
     def move_list_forward(self):
@@ -231,8 +231,9 @@ class CrypTrackerApp(App):
         list_box = screen.ids.cryptos_list_boxlayout
         if list_box.searched_cryptos_list:
             last_box = screen.ids.cryptos_list_boxlayout.children[0]  # select the last displayed crypto
-            last_tuple = (last_box.crypto_id, last_box.crypto_name, last_box.crypto_value,
+            last_tuple = (last_box.crypto_symbol, last_box.crypto_name, last_box.crypto_value,
                           last_box.crypto_percent_change)  # repackage the values into a tuple
+
             index = list_box.searched_cryptos_list.index(last_tuple)  # find the index of that crypto
 
             if index < (len(list_box.searched_cryptos_list) - 5):  # if there are at least 5 cryptos left
@@ -241,7 +242,7 @@ class CrypTrackerApp(App):
                     (symbol, name, value, percent_change) = list_box.searched_cryptos_list[
                         i + index + 1]  # retrieve values
                     screen.ids.cryptos_list_boxlayout.add_widget(
-                        SelectCryptoBox(crypto_code=symbol, crypto_name=name, crypto_value=value,
+                        SelectCryptoBox(crypto_symbol=symbol, crypto_name=name, crypto_value=value,
                                       crypto_percent_change=percent_change))  # display crypto
             elif index != len(list_box.searched_cryptos_list) - 1:  # if there is at least 1 crypto left
                 screen.ids.cryptos_list_boxlayout.clear_widgets()  # remove all the rows
@@ -249,7 +250,7 @@ class CrypTrackerApp(App):
                     (symbol, name, value, percent_change) = list_box.searched_cryptos_list[
                         i + index + 1]  # retrieve values
                     screen.ids.cryptos_list_boxlayout.add_widget(
-                        SelectCryptoBox(crypto_code=symbol, crypto_name=name, crypto_value=value,
+                        SelectCryptoBox(crypto_symbol=symbol, crypto_name=name, crypto_value=value,
                                       crypto_percent_change=percent_change))  # display crypto
 
     def select_crypto(self, symbol):
