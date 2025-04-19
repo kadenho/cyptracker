@@ -51,7 +51,7 @@ def populate_values_list():
 
 def main():
     try:
-        password = input('What is your MySQL server password?')
+        password = input('What is your MySQL server password? ')
         url = CryptoDatabase.construct_mysql_url('localhost', 3306, 'cryptos', 'root', password)
         crypto_database = CryptoDatabase(url)
         crypto_database.ensure_tables_exist()

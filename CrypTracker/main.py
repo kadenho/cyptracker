@@ -69,8 +69,8 @@ def find_most_recent_timestamp(values_list):
 class CrypTrackerApp(App):
     def __init__(self, **kwargs):
         super(CrypTrackerApp, self).__init__(**kwargs)
-        password = input('What is the password to your MySQL server?')
-        url = CryptoDatabase.construct_mysql_url('localhost', 3306, 'cryptracker', 'root', password)
+        password = input('What is the password to your MySQL server? ')
+        url = CryptoDatabase.construct_mysql_url('localhost', 3306, 'cryptos', 'root', password)
         self.crypto_database = CryptoDatabase(url)
         self.session = self.crypto_database.create_session()
     Window.size = (540, 960)
@@ -102,14 +102,6 @@ class CrypTrackerApp(App):
         self.sm.current = 'AboutHelpScreen'
     def on_about_help_back_button_press(self):
         self.sm.current = 'MainDashboardScreen'
-
-
-
-
-
-
-
-
 
     def populate_list(self):
         """
