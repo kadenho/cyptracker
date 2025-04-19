@@ -256,8 +256,20 @@ class PortfolioTrackerApp(App):
             historic_coin_data = coin_gecko_api.get_coin_history_by_id(crypto_id, adjusted_date)
             price = historic_coin_data['market_data']['current_price']['usd']
             self.add_crypto_price(crypto_id, entry_date, price)
-        investment = self.session.query(CryptoPrice).filter(does_crypto_date_match).one().price * int(quantity)
-        portfolio_entry = PortfolioEntry(crypto_id=crypto_id, timestamp=entry_date, quantity=quantity, investment=investment)
+            self.display_popup('Database Error',
+                               'This crypto did not exist at your selected date. Please select a later date.',
+                               'New Portfolio Entry')
+        try:
+            investment = self.session.query(CryptoPrice).filter(does_crypto_date_match).one().price * int(quantity)
+            portfolio_entry = PortfolioEntry(crypto_id=crypto_id,
+                                         timestamp=entry_date,
+                                         quantity=quantity,
+                                         investment=investment)
+        except SQLAlchemyError:
+            self.display_popup('Invalid Date',
+                               'This crypto did not exist at this date, please choose a later date',
+                               'New Portfolio Entry')
+            return
 
         try:
             self.session.add(portfolio_entry)
