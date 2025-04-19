@@ -56,6 +56,7 @@ class SelectCryptoBox(BoxLayout):
     crypto_value = StringProperty()
     crypto_percent_change = StringProperty()
     searched_cryptos_list = ListProperty()
+    crypto_id = StringProperty()
 def find_most_recent_timestamp(values_list):
     """
     Take a list of values and return the most recent value
@@ -286,7 +287,7 @@ class CrypTrackerApp(App):
         plt.clf()  # clear the current plot
         timestamps = []
         values = []
-        screen = self.root.get_screen('view_history_screen')
+        screen = self.root.get_screen('ViewHistoryScreen')
         for value in screen.crypto_values:
             if value[0] >= max_previous_time:
                 timestamps.append(value[0])  # separate tuples into timestamps
@@ -315,7 +316,7 @@ class CrypTrackerApp(App):
         """
         Take the timestamps and values and generate a chart for the screen
         """
-        screen = self.root.get_screen('view_history_screen')
+        screen = self.root.get_screen('ViewHistoryScreen')
         x = timestamps  # set the x-axis to the timestamps
         y = values  # set the y-axis to the values
         plt.plot(x, y)  # plot the data
