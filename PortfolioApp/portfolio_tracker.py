@@ -1,5 +1,5 @@
 import re
-from datetime import datetime, date
+from datetime import datetime, date, timedelta, time
 
 from kivy.app import App
 from kivy.uix.button import Button
@@ -9,6 +9,7 @@ from kivy.properties import StringProperty, NumericProperty, ColorProperty
 from kivy.uix.popup import Popup
 from kivy.core.window import Window
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import Session
 
 from HistoricalPriceViewer.main import coin_gecko_api
 from Tokenstaller.cryptos import CryptoDatabase, Crypto, PortfolioEntry, CryptoPrice
@@ -140,6 +141,7 @@ class PortfolioTrackerApp(App):
             for i in range(crypto_count):
                 ids.append(cryptos[i].crypto_id)
         except SQLAlchemyError:
+            self.session.rollback()
             self.title_text = 'Database Error, make sure your port, username, and password are correct'
 
         return ids
@@ -186,7 +188,7 @@ class PortfolioTrackerApp(App):
         except IndexError:
                 popup_title = 'Crypto not found'
                 popup_message = f'Crypto with name {name} and symbol {symbol} not found.'
-                self.display_popup(popup_title, popup_message, 'Add Portfolio Entry')
+                self.display_popup(popup_title, popup_message, 'New Portfolio Entry')
                 return
         crypto = Crypto(name=name, symbol=symbol, crypto_id=added_crypto_id)
         if not (len(name) > 0 and len(symbol) > 0):
@@ -220,31 +222,51 @@ class PortfolioTrackerApp(App):
         :return: None
         """
         does_crypto_date_match = CryptoPrice.crypto_id == crypto_id and CryptoPrice.timestamp == entry_date
+
+        if crypto_id == 'Crypto ID':
+            self.display_popup('No Crypto ID Selected', 'Please select a Crypto ID.', 'New Portfolio Entry')
+            return
+
         if len(quantity) == 0:
             self.display_popup('Empty Data', 'Please enter in a quantity.', 'New Portfolio Entry')
             return
+
         try:
             entry_date = date.fromisoformat(entry_date)
+            # Sets the time element of the entry_date to be midnight
+            entry_date = datetime.combine(entry_date, time())
             # Date in format 'DD-MM-YYYY' as required by the CoinGecko API
             adjusted_date = f'{entry_date.day:02d}-{entry_date.month:02d}-{entry_date.year:04d}'
         except ValueError as error:
             self.display_popup('Date Error', str(error), 'New Portfolio Entry')
             return
+
+        if entry_date < datetime.combine(date.today(), time()) - timedelta(days=364):
+            self.display_popup('Date Out of Range',
+                               'Please enter a date within the last 364 days.',
+                               'New Portfolio Entry')
+            return
+
         if int(quantity) > 10000:
             self.display_popup('Value Error', 'Quantity is too high, please enter a lower quantity',
-                               'Add Portfolio Entry')
+                               'New Portfolio Entry')
             return
+
         if self.session.query(CryptoPrice).filter(does_crypto_date_match).count() == 0:
             historic_coin_data = coin_gecko_api.get_coin_history_by_id(crypto_id, adjusted_date)
             price = historic_coin_data['market_data']['current_price']['usd']
             self.add_crypto_price(crypto_id, entry_date, price)
         investment = self.session.query(CryptoPrice).filter(does_crypto_date_match).one().price * int(quantity)
         portfolio_entry = PortfolioEntry(crypto_id=crypto_id, timestamp=entry_date, quantity=quantity, investment=investment)
+
         try:
             self.session.add(portfolio_entry)
             self.session.commit()
         except SQLAlchemyError as error:
-            self.display_popup('Database Error', str(error), 'Add Portfolio Entry')
+            print(self.session.query(CryptoPrice).filter(CryptoPrice.crypto_id == crypto_id\
+                                                         and CryptoPrice.timestamp == entry_date).first().price)
+            self.session.rollback()
+            self.display_popup('Database Error', str(error), 'New Portfolio Entry')
             return
         self.display_popup('Entry Added', 'Portfolio Entry successfully added', 'Menu')
 
@@ -271,7 +293,6 @@ class PortfolioTrackerApp(App):
         for crypto_id in crypto_quantities:
             crypto_price = self.session.query(CryptoPrice).filter(CryptoPrice.crypto_id == crypto_id and timestamp == timestamp)
             if crypto_price.count() == 0:
-                # Price defaults to 100, should be an API call
                 price = coin_gecko_api.get_price(crypto_id, 'usd')
                 current_price = CryptoPrice(crypto_id=crypto_id, timestamp=timestamp, price=price)
                 self.session.add(current_price)
@@ -318,9 +339,10 @@ class CustomButton(Button):
 if __name__ == '__main__':
     Window.size = (400, (16 / 9) * 400)
     Window.top = 0
-
     try:
         app = PortfolioTrackerApp()
         app.run()
     except SQLAlchemyError as e:
         print(f'There was a database error: {e}')
+    except KeyboardInterrupt:
+        app.session.close()
