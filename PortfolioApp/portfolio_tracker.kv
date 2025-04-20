@@ -36,13 +36,13 @@ ScreenManager:
 
 
             CustomButton:
-                text: 'Add New Portfolio Entry'
+                text: 'Portfolio Entries'
                 text_color: (0.8, 0.8, 0.8, 1)
                 size_hint_x: 0.8
                 pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
                 on_press:
                     root.transition.direction = 'right'
-                    root.current = 'New Portfolio Entry'
+                    root.current = 'Portfolio Entries'
 
             CustomButton:
                 text: 'Check Portfolio Value'
@@ -59,7 +59,7 @@ ScreenManager:
                 size_hint_x: 0.8
                 pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
                 on_press:
-                    root.transition.direction = 'right'
+                    root.transition.direction = 'left'
                     root.current = 'Change Color'
 
     Screen:
@@ -126,10 +126,62 @@ ScreenManager:
                     root.current = 'Menu'
 
     Screen:
-        name: 'New Portfolio Entry'
+        name: 'Portfolio Entries'
 
         Label:
-            text: 'New Portfolio Entry'
+            text: 'Portfolio Entries'
+            pos_hint: {'center': (0.5, 0.9)}
+            size_hint: (1.0,0.1)
+            font_size: 24
+            text_size: self.size
+            halign: 'center'
+            valign: 'middle'
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: (1,0.8)
+            pos_hint: {'center': (0.5,0.4)}
+            padding: (0, 0, 0, 50)
+            spacing: 50
+
+            CustomButton:
+                text: 'Add Portfolio Entry'
+                size_hint_x: 0.5
+                pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
+                on_press:
+                    root.transition.direction =  'up'
+                    root.current = 'Add Portfolio Entry'
+
+            CustomButton:
+                text: 'Update Portfolio Entry'
+                size_hint_x: 0.5
+                pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
+                on_press:
+                    root.transition.direction =  'right'
+                    root.current = 'Update Portfolio Entry'
+
+            CustomButton:
+                text: 'Delete Portfolio Entry'
+                size_hint_x: 0.5
+                pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
+                on_press:
+                    root.transition.direction =  'down'
+                    root.current = 'Delete Portfolio Entry'
+                    app.delete_portfolio_page(-1)
+
+            CustomButton:
+                text: 'Return to Menu'
+                pos_hint: {'x': 0.125}
+                size_hint_x: 0.75
+                on_press:
+                    root.transition.direction =  'left'
+                    root.current = 'Menu'
+
+    Screen:
+        name: 'Add Portfolio Entry'
+
+        Label:
+            text: 'Add Portfolio Entry'
             pos_hint: {'center': (0.5, 0.9)}
             size_hint: (1.0,0.1)
             font_size: 24
@@ -189,17 +241,197 @@ ScreenManager:
                 size_hint_x: 0.5
                 pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
                 on_press:
-                    app.add_portfolio_entry(root.ids.spinner_crypto_id.text, root.ids.date_text.text, root.ids.quantity_text.text)
+                    app.modify_portfolio_entry(root.ids.spinner_crypto_id.text, root.ids.date_text.text, root.ids.quantity_text.text, 'Add')
                     quantity_text = ''
                     date_text = ''
 
             CustomButton:
-                text: 'Return to Menu'
+                text: 'Return to Portfolio Entries'
+                pos_hint: {'x': 0.125}
+                size_hint_x: 0.75
+                on_press:
+                    root.transition.direction =  'down'
+                    root.current = 'Portfolio Entries'
+
+    Screen:
+        name: 'Update Portfolio Entry'
+
+        Label:
+            text: 'Update Portfolio Entry'
+            pos_hint: {'center': (0.5, 0.9)}
+            size_hint: (1.0,0.1)
+            font_size: 24
+            text_size: self.size
+            halign: 'center'
+            valign: 'middle'
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: (1,0.8)
+            pos_hint: {'center': (0.5,0.45)}
+            padding: (0, 0, 0, 0)
+            spacing: 10
+
+            Label:
+                text: 'Please select a portfolio entry to update.'
+                text_size: self.size
+                halign: 'center'
+                valign: 'middle'
+
+            Spinner:
+                id: spinner_update_portfolio
+                text: '1'
+                values: []
+                size_hint: (0.5,1.0)
+                pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
+                option_cls: 'PortfolioUpdateSpinner'
+                on_press:
+                    self.values = app.portfolio_info
+
+            Spinner:
+                id: update_spinner_crypto_id
+                text: 'Crypto ID'
+                values: app.crypto_ids
+                size_hint: (0.5,1.0)
+                pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
+                on_press:
+                    self.values = app.crypto_ids
+
+            Label:
+                text: 'Date Purchased'
+                text_size: self.size
+                halign: 'center'
+                valign: 'middle'
+
+            TextInput:
+                id: update_date_text
+                hint_text: 'YYYY-MM-DD'
+                size_hint_x: 0.8
+                pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
+
+            Label:
+                text: 'Quantity Purchased'
+                text_size: self.size
+                halign: 'center'
+                valign: 'middle'
+
+            TextInput:
+                id: update_quantity_text
+                input_filter: 'int'
+                hint_text: '1'
+                size_hint_x: 0.8
+                pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
+
+            CustomButton:
+                text: 'Update Portfolio Entry'
+                size_hint_x: 0.5
+                pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
+                on_press:
+                    app.modify_portfolio_entry(root.ids.update_spinner_crypto_id.text,
+                    root.ids.update_date_text.text,
+                    root.ids.update_quantity_text.text,
+                    entry_id=root.ids.spinner_update_portfolio.text,
+                    operation='Update'
+                    )
+                    quantity_text = ''
+                    date_text = ''
+
+            CustomButton:
+                text: 'Return to Portfolio Entries'
                 pos_hint: {'x': 0.125}
                 size_hint_x: 0.75
                 on_press:
                     root.transition.direction =  'left'
-                    root.current = 'Menu'
+                    root.current = 'Portfolio Entries'
+
+    Screen:
+        name: 'Delete Portfolio Entry'
+
+        Label:
+            text: 'Delete Portfolio Entry'
+            pos_hint: {'center': (0.5, 0.9)}
+            size_hint: (1.0,0.1)
+            font_size: 24
+            text_size: self.size
+            halign: 'center'
+            valign: 'middle'
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: (1,0.8)
+            pos_hint: {'center': (0.5,0.45)}
+            padding: (0, 0, 0, 0)
+            spacing: 10
+
+            Label:
+                text: 'Please select a portfolio entry to delete.'
+                text_size: self.size
+                halign: 'center'
+                valign: 'middle'
+
+            Spinner:
+                id: spinner_delete_portfolio
+                text: '1'
+                values: []
+                size_hint: (0.5,1.0)
+                pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
+                option_cls: 'PortfolioDeleteSpinner'
+                on_press:
+                    self.values = app.portfolio_info
+
+            Label:
+                id: delete_crypto_id
+                text: 'Crypto ID'
+                color: app.outline_color
+                outline_color: app.text_color
+                size_hint: (0.5,1.0)
+                pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
+
+            Label:
+                text: 'Date Purchased'
+                text_size: self.size
+                halign: 'center'
+                valign: 'middle'
+
+            Label:
+                id: delete_date_text
+                text: 'YYYY-MM-DD'
+                color: app.outline_color
+                outline_color: app.text_color
+                size_hint_x: 0.8
+                pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
+
+            Label:
+                text: 'Quantity Purchased'
+                text_size: self.size
+                halign: 'center'
+                valign: 'middle'
+
+            Label:
+                id: delete_quantity_text
+                text: '0'
+                color: app.outline_color
+                outline_color: app.text_color
+                size_hint_x: 0.8
+                pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
+
+            CustomButton:
+                text: 'Delete Portfolio Entry'
+                size_hint_x: 0.5
+                pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
+                on_press:
+                    app.modify_portfolio_entry(
+                    entry_id=root.ids.spinner_delete_portfolio.text,
+                    operation='Delete'
+                    )
+
+            CustomButton:
+                text: 'Return to Portfolio Entries'
+                pos_hint: {'x': 0.125}
+                size_hint_x: 0.75
+                on_press:
+                    root.transition.direction =  'up'
+                    root.current = 'Portfolio Entries'
 
     Screen:
         name: 'Check Portfolio'
@@ -321,7 +553,7 @@ ScreenManager:
             pos_hint: {'center': (0.5,0.125)}
             size_hint: (0.5, 0.125)
             on_press:
-                root.transition.direction =  'left'
+                root.transition.direction =  'right'
                 root.current = 'Menu'
 
 

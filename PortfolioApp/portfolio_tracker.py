@@ -8,13 +8,14 @@ from kivy.modules import inspector
 from kivy.properties import StringProperty, NumericProperty, ColorProperty
 from kivy.uix.popup import Popup
 from kivy.core.window import Window
+from kivy.uix.spinner import SpinnerOption
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import Session
 
 from HistoricalPriceViewer.main import coin_gecko_api
 from Tokenstaller.cryptos import CryptoDatabase, Crypto, PortfolioEntry, CryptoPrice
 from Tokenstaller.cryptos import ValueCheck
 from pycoingecko import CoinGeckoAPI
+
 
 def text_color_from_value(label, lower, upper):
     """
@@ -74,18 +75,15 @@ def popup_update_text_size(instance):
     instance.children[0].children[0].children[0].text_size = instance.children[0].children[0].children[0].size
     return
 
-
 class PortfolioTrackerApp(App):
     kv_file = 'portfolio_tracker.kv'
-    title_text = StringProperty('PortfolioApp Portfolio App')
+    title_text = StringProperty('Portfolio App')
 
     background_color = ColorProperty([0.0, 0.0, 0.0, 1.0])
     text_color = ColorProperty([0.0, 0.0, 0.0, 1.0])
     outline_color = ColorProperty([1.0, 1.0, 1.0, 1.0])
     # Button color has to be transparent so its canvas color isn't obscured by it
     button_color = ColorProperty([1.0, 1.0, 1.0, 0.0])
-
-
 
     portfolio_report_date = StringProperty('')
     portfolio_report_previous_date = StringProperty('')
@@ -99,6 +97,10 @@ class PortfolioTrackerApp(App):
         url = CryptoDatabase.construct_mysql_url('localhost', 3306, 'cryptos', 'root', password)
         self.crypto_database = CryptoDatabase(url)
         self.session = self.crypto_database.create_session()
+        self.session.close()
+        self.session = self.crypto_database.create_session()
+        self.session.rollback()
+
 
     def build(self):
         inspector.create_inspector(Window, self)  # For inspection (press control-e to toggle).
@@ -126,7 +128,41 @@ class PortfolioTrackerApp(App):
                 color.append(0)
                 self.button_color = color
 
+    def delete_portfolio_page(self, entry_id=1):
+        """
+        Edits the text in the Delete Portfolio Entry screen in the .kv
+        :param entry_id: ID of the portfolio entry whose data is to be displayed. -1 for placeholders.
+        :return: None
+        """
+        # Populate with default data if -1 is given
+        if entry_id == -1:
+            self.root.ids.delete_crypto_id.text = 'Crypto ID'
+            self.root.ids.delete_date_text.text = 'YYYY-MM-DD'
+            self.root.ids.delete_quantity_text.text = '0'
+            return
+        selected_entry = self.session.query(PortfolioEntry).filter(PortfolioEntry.entry_id == entry_id).first()
 
+        try:
+            self.root.ids.delete_crypto_id.text = str(selected_entry.crypto_id)
+
+        except AttributeError as ae:
+            print(ae)
+            self.display_popup('No Entry Found',
+                              f'There is no Portfolio Entry with id {entry_id}.',
+                              'Delete Portfolio Entry')
+            return
+
+        self.root.ids.delete_crypto_id.text = str(selected_entry.crypto_id)
+        self.root.ids.delete_date_text.text = str(selected_entry.timestamp.date())
+        self.root.ids.delete_quantity_text.text = str(selected_entry.quantity)
+        return
+
+    def update_portfolio_page(self, entry_id=1):
+        selected_entry = self.session.query(PortfolioEntry).filter(PortfolioEntry.entry_id == entry_id).first()
+        self.root.ids.update_spinner_crypto_id.text = str(selected_entry.crypto_id)
+        self.root.ids.update_date_text.hint_text = str(selected_entry.timestamp.date())
+        self.root.ids.update_quantity_text.text = str(selected_entry.quantity)
+        return
 
     @property
     def crypto_ids(self):
@@ -145,6 +181,26 @@ class PortfolioTrackerApp(App):
             self.title_text = 'Database Error, make sure your port, username, and password are correct'
 
         return ids
+
+    @property
+    def portfolio_info(self):
+        """
+        Returns a list of entry_ids from the portfolio_entries table
+        """
+        entry_info = []
+        try:
+            entries = self.session.query(PortfolioEntry)
+            print(entries)
+            entry_count = entries.count()
+            print(entry_count)
+            for i in range(entry_count):
+                entry_info.append(str(entries[i].entry_id))
+            print(entry_info)
+        except SQLAlchemyError:
+            self.session.rollback()
+            self.title_text = 'Database Error, make sure your port, username, and password are correct'
+
+        return entry_info
 
     def display_popup(self, title, text, next_screen):
         """
@@ -183,13 +239,14 @@ class PortfolioTrackerApp(App):
         Error handled for case of there being no crypto that fits.'''
 
         try:
-            added_crypto_id = list(filter(lambda dictionary: dictionary["symbol"] == symbol\
-                        and dictionary["name"] == name, coin_gecko_api.get_coins_list()))[0]['id']
+            added_crypto_id = list(filter(lambda dictionary: dictionary["symbol"] == symbol \
+                                                             and dictionary["name"] == name,
+                                          coin_gecko_api.get_coins_list()))[0]['id']
         except IndexError:
-                popup_title = 'Crypto not found'
-                popup_message = f'Crypto with name {name} and symbol {symbol} not found.'
-                self.display_popup(popup_title, popup_message, 'New Portfolio Entry')
-                return
+            popup_title = 'Crypto not found'
+            popup_message = f'Crypto with name {name} and symbol {symbol} not found.'
+            self.display_popup(popup_title, popup_message, 'New Portfolio Entry')
+            return
         crypto = Crypto(name=name, symbol=symbol, crypto_id=added_crypto_id)
         if not (len(name) > 0 and len(symbol) > 0):
             self.display_popup('Empty Data', 'Please enter data for all fields.', 'New Cryptocurrency')
@@ -213,22 +270,45 @@ class PortfolioTrackerApp(App):
         self.session.add(crypto_price)
         self.session.commit()
 
-    def add_portfolio_entry(self, crypto_id, entry_date, quantity):
+    def modify_portfolio_entry(self, crypto_id=None, entry_date=None, quantity=None, operation=None, entry_id=None):
         """
-        Adds a portfolio entry to the database using its id, a date, and a quantity
+        Either adds, updates, or deletes a portfolio entry to the database using its id, a date, and a quantity
         :param crypto_id: id of the crypto
         :param entry_date: Date of entry
         :param quantity: Quantity of the crypto bought at that date
+        :param operation: 'Add', 'Delete', or 'Update'
+        :param entry_id: ID of the entry to be modified in case of Updating or Deleting
         :return: None
         """
+
+        # Logic for deleting a portfolio entry
+        if operation == 'Delete':
+            try:
+                entry = self.session.query(PortfolioEntry).filter(PortfolioEntry.entry_id == entry_id).one()
+            except SQLAlchemyError:
+                self.display_popup('No Portfolio Entry Found',
+                                   f'There is no portfolio entry with id {entry_id}',
+                                   'Portfolio Entries')
+                return
+            self.session.delete(entry)
+            self.delete_portfolio_page(-1)
+            # Decrements proceeding ids so there are no gaps
+            for i in range(int(entry_id)+1, len(self.portfolio_info)):
+                self.session.query(PortfolioEntry)[i].entry_id -= 1
+
+            self.display_popup('Entry Deleted',
+                               'Portfolio entry successfully deleted.',
+                               'Portfolio Entries')
+            return
+
         does_crypto_date_match = CryptoPrice.crypto_id == crypto_id and CryptoPrice.timestamp == entry_date
 
         if crypto_id == 'Crypto ID':
-            self.display_popup('No Crypto ID Selected', 'Please select a Crypto ID.', 'New Portfolio Entry')
+            self.display_popup('No Crypto ID Selected', 'Please select a Crypto ID.', f'{operation} Portfolio Entry')
             return
 
         if len(quantity) == 0:
-            self.display_popup('Empty Data', 'Please enter in a quantity.', 'New Portfolio Entry')
+            self.display_popup('Empty Data', 'Please enter in a quantity.', f'{operation} Portfolio Entry')
             return
 
         try:
@@ -238,53 +318,72 @@ class PortfolioTrackerApp(App):
             # Date in format 'DD-MM-YYYY' as required by the CoinGecko API
             adjusted_date = f'{entry_date.day:02d}-{entry_date.month:02d}-{entry_date.year:04d}'
         except ValueError as error:
-            self.display_popup('Date Error', str(error), 'New Portfolio Entry')
+            self.display_popup('Date Error', str(error), f'{operation} Portfolio Entry')
             return
 
         if entry_date < datetime.combine(date.today(), time()) - timedelta(days=364):
             self.display_popup('Date Out of Range',
                                'Please enter a date within the last 364 days.',
-                               'New Portfolio Entry')
+                               f'{operation} Portfolio Entry')
             return
 
         if int(quantity) > 10000:
             self.display_popup('Value Error', 'Quantity is too high, please enter a lower quantity',
-                               'New Portfolio Entry')
+                               f'{operation} Portfolio Entry')
             return
+        # Logic for adding an entry
+        if operation == 'Add':
+            # Add a price entry for the given date if none is found in the Database
+            if self.session.query(CryptoPrice).filter(does_crypto_date_match).count() == 0:
+                historic_coin_data = coin_gecko_api.get_coin_history_by_id(crypto_id, adjusted_date)
+                price = historic_coin_data['market_data']['current_price']['usd']
+                self.add_crypto_price(crypto_id, entry_date, price)
+                self.display_popup('Database Error',
+                                   'This crypto did not exist at your selected date. Please select a later date.',
+                                   f'{operation} Portfolio Entry')
+            try:
+                investment = self.session.query(CryptoPrice).filter(does_crypto_date_match).first().price * int(
+                    quantity)
+                portfolio_entry = PortfolioEntry(crypto_id=crypto_id,
+                                                 timestamp=entry_date,
+                                                 quantity=quantity,
+                                                 investment=investment)
+            except SQLAlchemyError as error:
+                print(error)
+                self.session.rollback()
+                self.display_popup('Invalid Date',
+                                   'This crypto did not exist at this date, please choose a later date',
+                                   f'{operation} Portfolio Entry')
+                return
 
-        if self.session.query(CryptoPrice).filter(does_crypto_date_match).count() == 0:
-            historic_coin_data = coin_gecko_api.get_coin_history_by_id(crypto_id, adjusted_date)
-            price = historic_coin_data['market_data']['current_price']['usd']
-            self.add_crypto_price(crypto_id, entry_date, price)
-            self.display_popup('Database Error',
-                               'This crypto did not exist at your selected date. Please select a later date.',
-                               'New Portfolio Entry')
-        try:
-            investment = self.session.query(CryptoPrice).filter(does_crypto_date_match).one().price * int(quantity)
-            portfolio_entry = PortfolioEntry(crypto_id=crypto_id,
-                                         timestamp=entry_date,
-                                         quantity=quantity,
-                                         investment=investment)
-        except SQLAlchemyError:
-            self.display_popup('Invalid Date',
-                               'This crypto did not exist at this date, please choose a later date',
-                               'New Portfolio Entry')
-            return
+            try:
+                self.session.add(portfolio_entry)
+                self.session.commit()
+            except SQLAlchemyError as error:
+                print(self.session.query(CryptoPrice).filter(CryptoPrice.crypto_id == crypto_id \
+                                                             and CryptoPrice.timestamp == entry_date).first().price)
+                self.session.rollback()
+                self.display_popup('Database Error', str(error), 'New Portfolio Entry')
+                return
 
-        try:
-            self.session.add(portfolio_entry)
-            self.session.commit()
-        except SQLAlchemyError as error:
-            print(self.session.query(CryptoPrice).filter(CryptoPrice.crypto_id == crypto_id\
-                                                         and CryptoPrice.timestamp == entry_date).first().price)
-            self.session.rollback()
-            self.display_popup('Database Error', str(error), 'New Portfolio Entry')
-            return
-        self.display_popup('Entry Added', 'Portfolio Entry successfully added', 'Menu')
+            self.display_popup('Entry Added', 'Portfolio Entry successfully added', 'Portfolio Entries')
+        # Logic for updating a portfolio entry
+        investment = self.session.query(CryptoPrice).filter(does_crypto_date_match).first().price * int(quantity)
+        entry = self.session.query(PortfolioEntry).filter(PortfolioEntry.entry_id == entry_id).one()
+        entry.crypto_id = crypto_id
+        entry.timestamp = entry_date
+        entry.quantity = quantity
+        entry.investment = investment
+        self.session.commit()
+        self.display_popup(title='Entry Updated',
+                           text='Portfolio entry successfully updated.',
+                           next_screen='Portfolio Entries')
+
 
     def add_value_check(self, timestamp=datetime.now()):
         """
         Adds a value check to the database containing a date, total value, and percentage change.
+        :param self: Object on which the call is being made
         :param timestamp: Date of the value check, defaults to the current date.
         :return: None
         """
@@ -303,7 +402,8 @@ class PortfolioTrackerApp(App):
             crypto_quantities.setdefault(entry.crypto_id, 0)
             crypto_quantities[entry.crypto_id] += entry.quantity
         for crypto_id in crypto_quantities:
-            crypto_price = self.session.query(CryptoPrice).filter(CryptoPrice.crypto_id == crypto_id and timestamp == timestamp)
+            crypto_price = self.session.query(CryptoPrice).filter(
+                CryptoPrice.crypto_id == crypto_id and timestamp == timestamp)
             if crypto_price.count() == 0:
                 price = coin_gecko_api.get_price(crypto_id, 'usd')
                 current_price = CryptoPrice(crypto_id=crypto_id, timestamp=timestamp, price=price)
@@ -348,6 +448,22 @@ class CustomButton(Button):
             self.background_color = self.default_background_color
 
 
+class PortfolioUpdateSpinner(SpinnerOption):
+    def __init__(self, **kwargs):
+        super(PortfolioUpdateSpinner, self).__init__(**kwargs)
+
+    def on_press(self):
+        app.update_portfolio_page(self.text)
+
+
+class PortfolioDeleteSpinner(SpinnerOption):
+    def __init__(self, **kwargs):
+        super(PortfolioDeleteSpinner, self).__init__(**kwargs)
+
+    def on_press(self):
+        app.delete_portfolio_page(self.text)
+
+
 if __name__ == '__main__':
     Window.size = (400, (16 / 9) * 400)
     Window.top = 0
@@ -355,6 +471,7 @@ if __name__ == '__main__':
         app = PortfolioTrackerApp()
         app.run()
     except SQLAlchemyError as e:
+        app.session.rollback()
         print(f'There was a database error: {e}')
     except KeyboardInterrupt:
         app.session.close()
