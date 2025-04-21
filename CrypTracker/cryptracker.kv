@@ -283,66 +283,67 @@ ScreenManager:
             text: 'Home'
             on_press:
                 root.manager.current = 'MainDashboardScreen'
-
         BoxLayout:
             orientation: 'vertical'
+            BoxLayout:
+                orientation: 'vertical'
 
-            Text:
-                text: 'Historical Price Viewer'
-                font_size: sp(40)
-                font_name: 'Roboto-Bold'
+                Text:
+                    text: 'Historical Price Viewer'
+                    font_size: sp(40)
+                    font_name: 'Roboto-Bold'
+
+                BoxLayout:
+                    orientation: 'horizontal'
+
+                    Widget:
+                        orientation: 'vertical'
+                        size_hint: (0.25, 1)
+
+                    TextInput:
+                        id: select_crypto_text_input
+                        multiline: False
+                        size_hint: (0.5, 0.5)
+
+                    Button:
+                        id: select_crypto_enter_button
+                        text: 'Search'
+                        background_color: (0.25, 0.25, 0.25)
+                        color: (1.0, 1.0, 1.0)
+                        text_size: self.width, None
+                        height: self.texture_size[1]
+                        halign: 'center'
+                        valign: 'middle'
+                        size_hint: (0.5,0.5)
+                        on_press:
+                            app.repopulate_list()
+
+                    Widget:
+                        orientation: 'vertical'
+                        size_hint: (0.25, 1)
+
+            BoxLayout:
+                id: cryptos_list_boxlayout
+                orientation: 'vertical'
 
             BoxLayout:
                 orientation: 'horizontal'
+                size_hint: (1, 0.1)
 
-                Widget:
-                    orientation: 'vertical'
-                    size_hint: (0.25, 1)
-
-                TextInput:
-                    id: select_crypto_text_input
-                    multiline: False
-                    size_hint: (0.5, 0.5)
-
-                Button:
-                    id: select_crypto_enter_button
-                    text: 'Search'
-                    background_color: (0.25, 0.25, 0.25)
-                    color: (1.0, 1.0, 1.0)
-                    text_size: self.width, None
-                    height: self.texture_size[1]
-                    halign: 'center'
-                    valign: 'middle'
-                    size_hint: (0.5,0.5)
+                FormattedButton:
+                    id: select_crypto_list_back
+                    text: 'Back'
                     on_press:
-                        app.repopulate_list()
+                        app.move_list_back()
 
                 Widget:
-                    orientation: 'vertical'
-                    size_hint: (0.25, 1)
+                    size_hint: (1.5, 1)
 
-        BoxLayout:
-            id: cryptos_list_boxlayout
-            orientation: 'vertical'
-
-        BoxLayout:
-            orientation: 'horizontal'
-            size_hint: (1, 0.1)
-
-            FormattedButton:
-                id: select_crypto_list_back
-                text: 'Back'
-                on_press:
-                    app.move_list_back()
-
-            Widget:
-                size_hint: (1.5, 1)
-
-            FormattedButton:
-                id: select_crypto_list_next
-                text: 'Next'
-                on_press:
-                    app.move_list_forward()
+                FormattedButton:
+                    id: select_crypto_list_next
+                    text: 'Next'
+                    on_press:
+                        app.move_list_forward()
 
 <ViewHistoryScreen>:
 
@@ -358,24 +359,41 @@ ScreenManager:
 
         BoxLayout:
             orientation: 'vertical'
-
             BoxLayout:
-                orientation: 'horizontal'
+                orientation: 'vertical'
+                BoxLayout:
+                    orientation: 'horizontal'
 
-                FormattedButton:
-                    text: '30 Day Graph'
-                    on_press:
-                        app.display_month_chart()
+                    FormattedButton:
+                        text: '30 Day Graph'
+                        on_press:
+                            app.display_month_graph()
 
-                FormattedButton:
-                    text: '7 Day Graph'
-                    on_press:
-                        app.display_week_chart()
+                    FormattedButton:
+                        text: '7 Day Graph'
+                        on_press:
+                            app.display_week_graph()
 
-                FormattedButton:
-                    text: '1 Day Graph'
-                    on_press:
-                        app.display_day_chart()
+                    FormattedButton:
+                        text: '1 Day Graph'
+                        on_press:
+                            app.display_day_graph()
+                BoxLayout:
+                    orientation: 'horizontal'
+
+                    FormattedButton:
+                        text: 'Line Graph'
+                        on_press:
+                            app.display_line_graph()
+                    FormattedButton:
+                        text: 'Bar Graph'
+                        on_press:
+                            app.display_bar_graph()
+                    FormattedButton:
+                        text: 'Candlestick Graph'
+                        on_press:
+                            app.display_candlestick_graph()
+
             BoxLayout:
                 size_hint: (1, 2)
                 orientation: 'vertical'
