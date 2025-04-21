@@ -315,24 +315,24 @@ ScreenManager:
                 id: cryptos_list_boxlayout
                 orientation: 'vertical'
 
-                BoxLayout:
-                    orientation: 'horizontal'
-                    size_hint: (1, 0.1)
+            BoxLayout:
+                orientation: 'horizontal'
+                size_hint: (1, 0.1)
 
-                    FormattedButton:
-                        id: select_crypto_list_back
-                        text: 'Back'
-                        on_press:
-                            app.move_list_back()
+                FormattedButton:
+                    id: select_crypto_list_back
+                    text: 'Back'
+                    on_press:
+                        app.move_list_back()
 
-                    Widget:
-                        size_hint: (1.5, 1)
+                Widget:
+                    size_hint: (1.5, 1)
 
-                    FormattedButton:
-                        id: select_crypto_list_next
-                        text: 'Next'
-                        on_press:
-                            app.move_list_forward()
+                FormattedButton:
+                    id: select_crypto_list_next
+                    text: 'Next'
+                    on_press:
+                        app.move_list_forward()
 
 <ViewHistoryScreen>:
 
