@@ -10,7 +10,6 @@ from kivy.uix.popup import Popup
 from kivy.core.window import Window
 from kivy.uix.spinner import SpinnerOption
 from sqlalchemy.exc import SQLAlchemyError
-
 from HistoricalPriceViewer.main import coin_gecko_api
 from Tokenstaller.cryptos import CryptoDatabase, Crypto, PortfolioEntry, CryptoPrice
 from Tokenstaller.cryptos import ValueCheck
