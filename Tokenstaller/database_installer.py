@@ -1,7 +1,7 @@
 from random import uniform, randint
 from sys import stderr
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -39,14 +39,16 @@ def add_starter_data(session):
 
 def populate_values_list():
     values_list = []
+    current_timestamp = datetime(2025, 1, 30, 23, 0, 0)
     price = randint(1, 50000)
-    for i in range(30):
+    for i in range(90):
         for j in range(24):
             price_variation = round(price * 0.025, 2)
             price += round(uniform(-price_variation, price_variation))
             if price < 0:
                 price = 0
-            values_list.append(CryptoPrice(timestamp=datetime(2025, 1, i + 1, j, 0, 0), price=price))
+            values_list.append(CryptoPrice(timestamp=current_timestamp, price=price))
+            current_timestamp -= timedelta(hours=1)
     return values_list
 
 def main():
