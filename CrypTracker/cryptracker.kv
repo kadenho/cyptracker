@@ -373,14 +373,15 @@ ScreenManager:
                     FormattedButton:
                         text: 'Line Graph'
                         on_press:
-                            self.graph_type = 'line'
-                            app.display_month_graph()
+                            app.display_line_graph()
                     FormattedButton:
                         text: 'Bar Graph'
-                            self.graph_type = 'bar'
+                        on_press:
+                            app.display_bar_graph()
                     FormattedButton:
                         text: 'Candlestick Graph'
-                            self.graph_type = 'candlestick'
+                        on_press:
+                            app.display_candlestick_graph()
 
             BoxLayout:
                 size_hint: (1, 2)

@@ -327,6 +327,30 @@ class CrypTrackerApp(App):
         screen.ids.graph_range = 'day'
         self.display_graph()
 
+    def display_line_graph(self):
+        """
+        Generate and display a line graph
+        """
+        screen = self.root.get_screen('ViewHistoryScreen')
+        screen.graph_type = 'line'
+        self.display_graph()
+
+
+    def display_bar_graph(self):
+        """
+        Generate and display a line graph
+        """
+        screen = self.root.get_screen('ViewHistoryScreen')
+        screen.graph_type = 'bar'
+        self.display_graph()
+
+    def display_candlestick_graph(self):
+        """
+        Generate and display a line graph
+        """
+        screen = self.root.get_screen('ViewHistoryScreen')
+        screen.graph_type = 'candlestick'
+        self.display_graph()
 
     def generate_chart(self, timestamps, values):
         """
@@ -336,36 +360,38 @@ class CrypTrackerApp(App):
         mean_value = sum(values)/(len(values))
         minimum_value = min(values)
         screen = self.root.get_screen('ViewHistoryScreen')
-        if screen.graph_type=='line':
-            plt.plot(timestamps, values)  # plot the data
-            plt.xlabel('Timestamp')  # label the x-axis
-            plt.xticks(rotation=30)  # rotate the labels 30 degrees
-            plt.gca().xaxis.set_major_locator(AutoDateLocator())  # finds the optimal tick locations
-            plt.gca().xaxis.set_major_formatter(
-                ConciseDateFormatter(AutoDateLocator()))  # finds the optimal way to label the dates
-            plt.ylabel('Price')  # label the y-axis
-            plt.grid()
-            plt.axhline(y=max_value, color='#158a41', linestyle='--', linewidth=1) # add line for max value
-            plt.text(timestamps[0], max_value, f'Max: {round(max_value,2)}', fontsize = 12) # add label max value line
-            plt.axhline(y=mean_value, color='cornflowerblue', linestyle='--', linewidth=1)  # add line for mean value
-            plt.text(timestamps[0], mean_value, f'Mean: {round(mean_value, 2)}', fontsize=12)  # add label mean value line
-            plt.axhline(y=minimum_value, color='#b81121', linestyle='--', linewidth=1)  # add line for minimum value
-            plt.text(timestamps[0], minimum_value, f'Min: {round(minimum_value, 2)}', fontsize=12)  # add label minimum value line
-            if values[0] > values[-1]:  # determine if price went down over course of the chart
-                plt.gca().get_lines()[0].set_color("#b81121") # set color red
-            elif values[0] < values[-1]:  # determine if price went up over course of the chart
-                plt.gca().get_lines()[0].set_color("#158a41")  # set color green
-            else:  # price stayed the same over course of the chart
-                plt.gca().get_lines()[0].set_color("cornflowerblue")  # set color blue
-            plt.title(screen.crypto_name)  # title the graph
-            screen.ids.chart_box.clear_widgets()  # remove the old chart
-            screen.ids.chart_box.add_widget(FigureCanvasKivyAgg(plt.gcf()))  # add the new chart
-        elif screen.graph_type == 'bar':
-            plt.plot(timestamps, values)
-            plt.xlabel('Categories')
-            plt.ylabel('Values')
-            plt.title('Basic Bar Graph')
-            plt.show()
+        match screen.graph_type:
+            case 'line':
+                plt.plot(timestamps, values)  # plot the data
+                plt.xlabel('Timestamp')  # label the x-axis
+                plt.xticks(rotation=30)  # rotate the labels 30 degrees
+                plt.gca().xaxis.set_major_locator(AutoDateLocator())  # finds the optimal tick locations
+                plt.gca().xaxis.set_major_formatter(
+                    ConciseDateFormatter(AutoDateLocator()))  # finds the optimal way to label the dates
+                plt.ylabel('Price')  # label the y-axis
+                plt.grid()
+                plt.axhline(y=max_value, color='#158a41', linestyle='--', linewidth=1) # add line for max value
+                plt.text(timestamps[0], max_value, f'Max: {round(max_value,2)}', fontsize = 12) # add label max value line
+                plt.axhline(y=mean_value, color='cornflowerblue', linestyle='--', linewidth=1)  # add line for mean value
+                plt.text(timestamps[0], mean_value, f'Mean: {round(mean_value, 2)}', fontsize=12)  # add label mean value line
+                plt.axhline(y=minimum_value, color='#b81121', linestyle='--', linewidth=1)  # add line for minimum value
+                plt.text(timestamps[0], minimum_value, f'Min: {round(minimum_value, 2)}', fontsize=12)  # add label minimum value line
+                if values[0] > values[-1]:  # determine if price went down over course of the chart
+                    plt.gca().get_lines()[0].set_color("#b81121") # set color red
+                elif values[0] < values[-1]:  # determine if price went up over course of the chart
+                    plt.gca().get_lines()[0].set_color("#158a41")  # set color green
+                else:  # price stayed the same over course of the chart
+                    plt.gca().get_lines()[0].set_color("cornflowerblue")  # set color blue
+                plt.title(screen.crypto_name)  # title the graph
+                screen.ids.chart_box.clear_widgets()  # remove the old chart
+                screen.ids.chart_box.add_widget(FigureCanvasKivyAgg(plt.gcf()))  # add the new chart
+            case 'bar':
+                plt.bar(timestamps, values)
+                plt.xlabel('Timestamps')
+                plt.ylabel('Price')
+                plt.title(screen.crypto_name)  # title the graph
+                screen.ids.chart_box.clear_widgets()  # remove the old chart
+                screen.ids.chart_box.add_widget(FigureCanvasKivyAgg(plt.gcf()))  # add the new chart
 
 if __name__ == '__main__':
     app = CrypTrackerApp()
