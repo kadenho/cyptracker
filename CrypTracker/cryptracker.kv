@@ -352,17 +352,18 @@ ScreenManager:
                 orientation: 'vertical'
                 BoxLayout:
                     orientation: 'horizontal'
-
+                    FormattedButton:
+                        text: '90 Day Graph'
+                        on_press:
+                            app.display_quarter_graph()
                     FormattedButton:
                         text: '30 Day Graph'
                         on_press:
                             app.display_month_graph()
-
                     FormattedButton:
                         text: '7 Day Graph'
                         on_press:
                             app.display_week_graph()
-
                     FormattedButton:
                         text: '1 Day Graph'
                         on_press:

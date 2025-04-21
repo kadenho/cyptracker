@@ -39,7 +39,7 @@ class ViewHistoryScreen(Screen):
     crypto_values = ListProperty()
     crypto_percent_change = StringProperty()
     graph_type = StringProperty('line')
-    graph_range = StringProperty('month')
+    graph_range = StringProperty('quarter')
 class CryptoWatchlistScreen(Screen):
     pass
 class Text(Label):
@@ -286,7 +286,9 @@ class CrypTrackerApp(App):
         timestamps = []
         values = []
         screen = self.root.get_screen('ViewHistoryScreen')
-        match screen.ids.graph_range:
+        match screen.graph_range:
+            case 'quarter':
+                max_previous_time = datetime(2024, 11, 1, 23, 59, 59)
             case 'month':
                 max_previous_time = datetime(2025, 1, 1, 23, 59, 59) # timestamp hard coded until api implementation
             case 'week':
@@ -300,7 +302,18 @@ class CrypTrackerApp(App):
             if value[0] >= max_previous_time:
                 timestamps.append(value[0])  # separate tuples into timestamps
                 values.append(value[1] * 0.01)
-        self.generate_chart(timestamps, values)  # generate the chart
+        graph = self.generate_chart(timestamps, values)  # generate the chart
+        screen.ids.chart_box.clear_widgets()  # remove the old chart
+        screen.ids.chart_box.add_widget(FigureCanvasKivyAgg(graph.gcf()))  # add the new chart
+
+    def display_quarter_graph(self):
+        """
+        Generate and display the chart for the month
+        """
+
+        screen = self.root.get_screen('ViewHistoryScreen')
+        screen.graph_range = 'quarter'
+        self.display_graph()
 
     def display_month_graph(self):
         """
@@ -308,7 +321,7 @@ class CrypTrackerApp(App):
         """
 
         screen = self.root.get_screen('ViewHistoryScreen')
-        screen.ids.graph_range = 'month'
+        screen.graph_range = 'month'
         self.display_graph()
 
     def display_week_graph(self):
@@ -316,7 +329,7 @@ class CrypTrackerApp(App):
         Generate and display the chart for the week
         """
         screen = self.root.get_screen('ViewHistoryScreen')
-        screen.ids.graph_range = 'week'
+        screen.graph_range = 'week'
         self.display_graph()
 
     def display_day_graph(self):
@@ -324,7 +337,7 @@ class CrypTrackerApp(App):
         Generate and display the chart for the day
         """
         screen = self.root.get_screen('ViewHistoryScreen')
-        screen.ids.graph_range = 'day'
+        screen.graph_range = 'day'
         self.display_graph()
 
     def display_line_graph(self):
@@ -334,7 +347,6 @@ class CrypTrackerApp(App):
         screen = self.root.get_screen('ViewHistoryScreen')
         screen.graph_type = 'line'
         self.display_graph()
-
 
     def display_bar_graph(self):
         """
@@ -383,8 +395,7 @@ class CrypTrackerApp(App):
                 else:  # price stayed the same over course of the chart
                     plt.gca().get_lines()[0].set_color("cornflowerblue")  # set color blue
                 plt.title(screen.crypto_name)  # title the graph
-                screen.ids.chart_box.clear_widgets()  # remove the old chart
-                screen.ids.chart_box.add_widget(FigureCanvasKivyAgg(plt.gcf()))  # add the new chart
+
             case 'bar':
                 categories = ['Max', 'Mean', 'Min']
                 colors = ['#158a41', 'cornflowerblue', '#b81121']
@@ -398,8 +409,12 @@ class CrypTrackerApp(App):
                 plt.text(.7, mean_value, f'Mean: {round(mean_value, 2)}', fontsize=12)  # add label mean value line
                 plt.axhline(y=minimum_value, color='#b81121', linestyle='--', linewidth=1)  # add line for minimum value
                 plt.text(1.7, minimum_value, f'Min: {round(minimum_value, 2)}', fontsize=12)  # add label minimum value line
-                screen.ids.chart_box.clear_widgets()  # remove the old chart
-                screen.ids.chart_box.add_widget(FigureCanvasKivyAgg(plt.gcf()))  # add the new chart
+            case 'candlestick':
+                plt.plot(timestamps, values)
+                plt.gca().xaxis.set_major_locator(AutoDateLocator())
+                plt.gca().xaxis.set_major_formatter(ConciseDateFormatter(AutoDateLocator()))
+                plt.title(screen.crypto_name)
+        return plt
 
 if __name__ == '__main__':
     app = CrypTrackerApp()
