@@ -314,10 +314,11 @@ class CrypTrackerApp(App):
         """
         Take the timestamps and values and generate a chart for the screen
         """
+        max_value = max(values)
+        mean_value = sum(values)/(len(values))
+        minimum_value = min(values)
         screen = self.root.get_screen('ViewHistoryScreen')
-        x = timestamps  # set the x-axis to the timestamps
-        y = values  # set the y-axis to the values
-        plt.plot(x, y)  # plot the data
+        plt.plot(timestamps, values)  # plot the data
         plt.xlabel('Timestamp')  # label the x-axis
         plt.xticks(rotation=30)  # rotate the labels 30 degrees
         plt.gca().xaxis.set_major_locator(AutoDateLocator())  # finds the optimal tick locations
@@ -325,6 +326,12 @@ class CrypTrackerApp(App):
             ConciseDateFormatter(AutoDateLocator()))  # finds the optimal way to label the dates
         plt.ylabel('Price')  # label the y-axis
         plt.grid()
+        plt.axhline(y=max_value, color='#158a41', linestyle='--', linewidth=1) # add line for max value
+        plt.text(timestamps[0], max_value, f'Max: {round(max_value,2)}', fontsize = 12) # add label max value line
+        plt.axhline(y=mean_value, color='cornflowerblue', linestyle='--', linewidth=1)  # add line for mean value
+        plt.text(timestamps[0], mean_value, f'Mean: {round(mean_value, 2)}', fontsize=12)  # add label mean value line
+        plt.axhline(y=minimum_value, color='#b81121', linestyle='--', linewidth=1)  # add line for minimum value
+        plt.text(timestamps[0], minimum_value, f'Min: {round(minimum_value, 2)}', fontsize=12)  # add label minimum value line
         if values[0] > values[-1]:  # determine if price went down over course of the chart
             plt.gca().get_lines()[0].set_color("#b81121") # set color red
         elif values[0] < values[-1]:  # determine if price went up over course of the chart
