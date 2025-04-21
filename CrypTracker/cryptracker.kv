@@ -356,17 +356,17 @@ ScreenManager:
                     FormattedButton:
                         text: '30 Day Graph'
                         on_press:
-                            app.display_month_chart()
+                            app.display_month_graph()
 
                     FormattedButton:
                         text: '7 Day Graph'
                         on_press:
-                            app.display_week_chart()
+                            app.display_week_graph()
 
                     FormattedButton:
                         text: '1 Day Graph'
                         on_press:
-                            app.display_day_chart()
+                            app.display_day_graph()
                 BoxLayout:
                     orientation: 'horizontal'
 
@@ -374,7 +374,7 @@ ScreenManager:
                         text: 'Line Graph'
                         on_press:
                             self.graph_type = 'line'
-                            app.display_month_chart()
+                            app.display_month_graph()
                     FormattedButton:
                         text: 'Bar Graph'
                             self.graph_type = 'bar'

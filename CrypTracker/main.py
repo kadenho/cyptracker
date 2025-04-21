@@ -276,9 +276,9 @@ class CrypTrackerApp(App):
         for crypto_value in selected_values:  # reassemble the values as a tuple
             assembled_tuple = (crypto_value.timestamp, crypto_value.price)
             screen.crypto_values.append(assembled_tuple)
-        self.display_month_chart()
+        self.display_month_graph()
 
-    def display_chart(self):
+    def display_graph(self):
         """
         Create and display the chart for the history screen with given max_date
         """
@@ -302,30 +302,30 @@ class CrypTrackerApp(App):
                 values.append(value[1] * 0.01)
         self.generate_chart(timestamps, values)  # generate the chart
 
-    def display_month_chart(self):
+    def display_month_graph(self):
         """
         Generate and display the chart for the month
         """
 
         screen = self.root.get_screen('ViewHistoryScreen')
         screen.ids.graph_range = 'month'
-        self.display_chart()
+        self.display_graph()
 
-    def display_week_chart(self):
+    def display_week_graph(self):
         """
         Generate and display the chart for the week
         """
         screen = self.root.get_screen('ViewHistoryScreen')
         screen.ids.graph_range = 'week'
-        self.display_chart()
+        self.display_graph()
 
-    def display_day_chart(self):
+    def display_day_graph(self):
         """
         Generate and display the chart for the day
         """
         screen = self.root.get_screen('ViewHistoryScreen')
         screen.ids.graph_range = 'day'
-        self.display_chart()
+        self.display_graph()
 
 
     def generate_chart(self, timestamps, values):
