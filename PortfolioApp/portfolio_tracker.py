@@ -58,8 +58,8 @@ def text_color_from_value(label, lower, upper):
     green_differentials = [green[i] - text_color[i] for i in range(4)]
     # 0, 1, 0
     red_differentials = [red[i] - text_color[i] for i in range(4)]
-    # Remove commas, spaces, periods, percentages, and dollar signs
-    value = int(label.text.translate({ord(c): None for c in ', %$.'}))
+    # Remove non-integers and store as an int
+    value = int(re.sub('[^0-9-]', '', label.text))
     if value > 0:
         value = min(value, upper)
         for i in range(4):
@@ -79,6 +79,7 @@ def popup_update_text_size(instance):
 class PortfolioTrackerApp(App):
     kv_file = 'portfolio_tracker.kv'
     title_text = StringProperty('Portfolio App')
+    user_id = NumericProperty(1)
 
     background_color = ColorProperty([0.0, 0.0, 0.0, 1.0])
     text_color = ColorProperty([0.0, 0.0, 0.0, 1.0])
@@ -89,7 +90,9 @@ class PortfolioTrackerApp(App):
     portfolio_report_date = StringProperty('')
     portfolio_report_previous_date = StringProperty('')
     portfolio_report_total = NumericProperty(0)
-    portfolio_report_percent_change = NumericProperty(0)
+    portfolio_report_change_from_previous = NumericProperty(0)
+    portfolio_report_change_from_investment = NumericProperty(0)
+
     coingecko_api = CoinGeckoAPI(demo_api_key='CG-1h5S2Brt9U9LxgUxyjtU4RBj')
 
     def __init__(self, **kwargs):
@@ -189,7 +192,7 @@ class PortfolioTrackerApp(App):
         """
         entry_info = []
         try:
-            entries = self.session.query(PortfolioEntry)
+            entries = self.session.query(PortfolioEntry).filter(PortfolioEntry.user_id == self.user_id)
             entry_count = entries.count()
             for i in range(entry_count):
                 entry_info.append(str(entries[i].entry_id))
@@ -267,7 +270,8 @@ class PortfolioTrackerApp(App):
         self.session.add(crypto_price)
         self.session.commit()
 
-    def modify_portfolio_entry(self, crypto_id=None, entry_date=None, quantity=None, operation=None, entry_id=None):
+    def modify_portfolio_entry(self, crypto_id=None, entry_date=None, quantity=None, operation=None, entry_id=None,
+                               user_id=None):
         """
         Either adds, updates, or deletes a portfolio entry to the database using its id, a date, and a quantity
         :param crypto_id: id of the crypto
@@ -289,10 +293,6 @@ class PortfolioTrackerApp(App):
                 return
             self.session.delete(entry)
             self.delete_portfolio_page(-1)
-            # Decrements proceeding ids so there are no gaps
-            for i in range(int(entry_id) + 1, len(self.portfolio_info)):
-                self.session.query(PortfolioEntry)[i].entry_id -= 1
-
             self.display_popup('Entry Deleted',
                                'Portfolio entry successfully deleted.',
                                'Portfolio Entries')
@@ -362,7 +362,8 @@ class PortfolioTrackerApp(App):
                 portfolio_entry = PortfolioEntry(crypto_id=crypto_id,
                                                  timestamp=entry_date,
                                                  quantity=quantity,
-                                                 investment=investment)
+                                                 investment=investment,
+                                                 user_id=self.user_id)
                 try:
                     self.session.add(portfolio_entry)
                     self.session.commit()
@@ -370,11 +371,20 @@ class PortfolioTrackerApp(App):
                     print(str(error), self.session.query(CryptoPrice).filter(CryptoPrice.crypto_id == crypto_id \
                                                                              and CryptoPrice.timestamp == entry_date).first().price)
                     self.session.rollback()
-                    self.display_popup('Database Error', str(error), 'New Portfolio Entry')
+                    self.display_popup('Database Error',
+                                       'There likely isn\'t a price for that crypto at that date'
+                                       ' in the database. You can try manually adding one.',
+                                       'New Portfolio Entry')
                 self.display_popup('Entry Added', 'Portfolio Entry successfully added', 'Portfolio Entries')
                 return
             # Logic for updating a portfolio entry
-            entry = self.session.query(PortfolioEntry).filter(PortfolioEntry.entry_id == entry_id).one()
+            try:
+                entry = self.session.query(PortfolioEntry).filter(PortfolioEntry.entry_id == entry_id).one()
+            except SQLAlchemyError:
+                self.display_popup('No Portfolio Entry Found',
+                                   f'There is no portfolio entry with id {entry_id}',
+                                   'Portfolio Entries')
+                return
             entry.crypto_id = crypto_id
             entry.timestamp = entry_date
             entry.quantity = quantity
@@ -392,7 +402,7 @@ class PortfolioTrackerApp(App):
         :return: None
         """
         count = self.session.query(ValueCheck).count()
-        # Boolean decides if percent_change compares against the previous value check or each initial investment
+        # Boolean decides if percent_change should also compare against the previous value check or only initial investment
         is_first_value_check = count == 0
         previous_value_check = self.session.query(ValueCheck)[count - 1] if not is_first_value_check else None
         total_value = 0
@@ -417,16 +427,22 @@ class PortfolioTrackerApp(App):
             else:
                 total_value += crypto_price.first().price * crypto_quantities[crypto_id] / 100
 
-        previous_value = total_initial_investment if is_first_value_check else previous_value_check.total_value
-        percentage_change = 100 * (total_value - previous_value) / abs(previous_value) if previous_value != 0 else 0
-        value_check = ValueCheck(timestamp=timestamp, total_value=total_value, percentage_change=percentage_change)
+            change_from_previous = None
+        if not is_first_value_check:
+            previous_value = previous_value_check.total_value
+            change_from_previous = 100 * (total_value - previous_value) / abs(previous_value) if previous_value != 0 else 0
+
+        change_from_investment = 100 * (total_value - total_initial_investment) / abs(
+            total_initial_investment) if total_initial_investment != 0 else 0
+        value_check = ValueCheck(timestamp=timestamp, total_value=total_value, change_from_previous=change_from_previous,
+                                 user_id=self.user_id, change_from_investment=change_from_investment)
         self.session.add(value_check)
         self.session.commit()
         self.portfolio_report_date = str(timestamp.date())
         self.portfolio_report_total = total_value
         self.portfolio_report_previous_date = str(
             previous_value_check.timestamp.date()) if previous_value_check is not None else 'N/A'
-        self.portfolio_report_percent_change = round(percentage_change)
+        self.portfolio_report_change_from_previous = None if is_first_value_check else round(change_from_previous)
 
 
 class CustomButton(Button):

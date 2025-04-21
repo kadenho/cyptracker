@@ -505,7 +505,7 @@ ScreenManager:
 
             Label:
                 id: percent_change
-                text: f'{app.portfolio_report_percent_change:,}%'
+                text: f'{app.portfolio_report_change_from_previous:,}% from previous report'
                 color: app.text_color
                 text_size: self.size
                 outline_width: 1
@@ -587,7 +587,6 @@ ScreenManager:
             size: self.size
 
 <Label>
-    font_name: 'ARLRDBD'
     font_size: 24
     outline_width: 2
     outline_color: app.outline_color
