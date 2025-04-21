@@ -38,10 +38,10 @@ class ViewHistoryScreen(Screen):
     crypto_name = StringProperty()
     crypto_values = ListProperty()
     crypto_percent_change = StringProperty()
+    graph_type = StringProperty('line')
+    graph_range = StringProperty('month')
 class CryptoWatchlistScreen(Screen):
     pass
-
-
 class Text(Label):
     pass
 class FormattedButton(Button):
@@ -278,7 +278,7 @@ class CrypTrackerApp(App):
             screen.crypto_values.append(assembled_tuple)
         self.display_month_chart()
 
-    def display_chart(self, max_previous_time):
+    def display_chart(self):
         """
         Create and display the chart for the history screen with given max_date
         """
@@ -286,6 +286,16 @@ class CrypTrackerApp(App):
         timestamps = []
         values = []
         screen = self.root.get_screen('ViewHistoryScreen')
+        match screen.ids.graph_range:
+            case 'month':
+                max_previous_time = datetime(2025, 1, 1, 23, 59, 59) # timestamp hard coded until api implementation
+            case 'week':
+                max_previous_time = datetime(2025, 1, 22, 23, 59, 59) # timestamp hard coded until api implementation
+            case 'day':
+                max_previous_time = datetime(2025, 1, 29, 23, 59, 59) # timestamp hard coded until api implementation
+            case _:
+                'Error: invalid graph range. Exiting program.'
+                sys.exit(1)
         for value in screen.crypto_values:
             if value[0] >= max_previous_time:
                 timestamps.append(value[0])  # separate tuples into timestamps
@@ -296,19 +306,27 @@ class CrypTrackerApp(App):
         """
         Generate and display the chart for the month
         """
-        self.display_chart(datetime(2025, 1, 1, 23, 59, 59))  # timestamp hard coded until api implementation
+
+        screen = self.root.get_screen('ViewHistoryScreen')
+        screen.ids.graph_range = 'month'
+        self.display_chart()
 
     def display_week_chart(self):
         """
         Generate and display the chart for the week
         """
-        self.display_chart(datetime(2025, 1, 22, 23, 59, 59))  # timestamp hard coded until api implementation
+        screen = self.root.get_screen('ViewHistoryScreen')
+        screen.ids.graph_range = 'week'
+        self.display_chart()
 
     def display_day_chart(self):
         """
         Generate and display the chart for the day
         """
-        self.display_chart(datetime(2025, 1, 29, 23, 59, 59))  # timestamp hard coded until api implementation
+        screen = self.root.get_screen('ViewHistoryScreen')
+        screen.ids.graph_range = 'day'
+        self.display_chart()
+
 
     def generate_chart(self, timestamps, values):
         """
@@ -318,29 +336,36 @@ class CrypTrackerApp(App):
         mean_value = sum(values)/(len(values))
         minimum_value = min(values)
         screen = self.root.get_screen('ViewHistoryScreen')
-        plt.plot(timestamps, values)  # plot the data
-        plt.xlabel('Timestamp')  # label the x-axis
-        plt.xticks(rotation=30)  # rotate the labels 30 degrees
-        plt.gca().xaxis.set_major_locator(AutoDateLocator())  # finds the optimal tick locations
-        plt.gca().xaxis.set_major_formatter(
-            ConciseDateFormatter(AutoDateLocator()))  # finds the optimal way to label the dates
-        plt.ylabel('Price')  # label the y-axis
-        plt.grid()
-        plt.axhline(y=max_value, color='#158a41', linestyle='--', linewidth=1) # add line for max value
-        plt.text(timestamps[0], max_value, f'Max: {round(max_value,2)}', fontsize = 12) # add label max value line
-        plt.axhline(y=mean_value, color='cornflowerblue', linestyle='--', linewidth=1)  # add line for mean value
-        plt.text(timestamps[0], mean_value, f'Mean: {round(mean_value, 2)}', fontsize=12)  # add label mean value line
-        plt.axhline(y=minimum_value, color='#b81121', linestyle='--', linewidth=1)  # add line for minimum value
-        plt.text(timestamps[0], minimum_value, f'Min: {round(minimum_value, 2)}', fontsize=12)  # add label minimum value line
-        if values[0] > values[-1]:  # determine if price went down over course of the chart
-            plt.gca().get_lines()[0].set_color("#b81121") # set color red
-        elif values[0] < values[-1]:  # determine if price went up over course of the chart
-            plt.gca().get_lines()[0].set_color("#158a41")  # set color green
-        else:  # price stayed the same over course of the chart
-            plt.gca().get_lines()[0].set_color("cornflowerblue")  # set color blue
-        plt.title(screen.crypto_name)  # title the graph
-        screen.ids.chart_box.clear_widgets()  # remove the old chart
-        screen.ids.chart_box.add_widget(FigureCanvasKivyAgg(plt.gcf()))  # add the new chart
+        if screen.graph_type=='line':
+            plt.plot(timestamps, values)  # plot the data
+            plt.xlabel('Timestamp')  # label the x-axis
+            plt.xticks(rotation=30)  # rotate the labels 30 degrees
+            plt.gca().xaxis.set_major_locator(AutoDateLocator())  # finds the optimal tick locations
+            plt.gca().xaxis.set_major_formatter(
+                ConciseDateFormatter(AutoDateLocator()))  # finds the optimal way to label the dates
+            plt.ylabel('Price')  # label the y-axis
+            plt.grid()
+            plt.axhline(y=max_value, color='#158a41', linestyle='--', linewidth=1) # add line for max value
+            plt.text(timestamps[0], max_value, f'Max: {round(max_value,2)}', fontsize = 12) # add label max value line
+            plt.axhline(y=mean_value, color='cornflowerblue', linestyle='--', linewidth=1)  # add line for mean value
+            plt.text(timestamps[0], mean_value, f'Mean: {round(mean_value, 2)}', fontsize=12)  # add label mean value line
+            plt.axhline(y=minimum_value, color='#b81121', linestyle='--', linewidth=1)  # add line for minimum value
+            plt.text(timestamps[0], minimum_value, f'Min: {round(minimum_value, 2)}', fontsize=12)  # add label minimum value line
+            if values[0] > values[-1]:  # determine if price went down over course of the chart
+                plt.gca().get_lines()[0].set_color("#b81121") # set color red
+            elif values[0] < values[-1]:  # determine if price went up over course of the chart
+                plt.gca().get_lines()[0].set_color("#158a41")  # set color green
+            else:  # price stayed the same over course of the chart
+                plt.gca().get_lines()[0].set_color("cornflowerblue")  # set color blue
+            plt.title(screen.crypto_name)  # title the graph
+            screen.ids.chart_box.clear_widgets()  # remove the old chart
+            screen.ids.chart_box.add_widget(FigureCanvasKivyAgg(plt.gcf()))  # add the new chart
+        elif screen.graph_type == 'bar':
+            plt.plot(timestamps, values)
+            plt.xlabel('Categories')
+            plt.ylabel('Values')
+            plt.title('Basic Bar Graph')
+            plt.show()
 
 if __name__ == '__main__':
     app = CrypTrackerApp()
