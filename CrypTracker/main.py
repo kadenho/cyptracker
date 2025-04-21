@@ -386,10 +386,18 @@ class CrypTrackerApp(App):
                 screen.ids.chart_box.clear_widgets()  # remove the old chart
                 screen.ids.chart_box.add_widget(FigureCanvasKivyAgg(plt.gcf()))  # add the new chart
             case 'bar':
-                plt.bar(timestamps, values)
-                plt.xlabel('Timestamps')
+                categories = ['Max', 'Mean', 'Min']
+                colors = ['#158a41', 'cornflowerblue', '#b81121']
+                plt.bar(categories, [max_value, mean_value, minimum_value], color=colors)
                 plt.ylabel('Price')
                 plt.title(screen.crypto_name)  # title the graph
+                plt.axhline(y=max_value, color='#158a41', linestyle='--', linewidth=1)  # add line for max value
+                plt.text(-0.3, max_value, f'Max: {round(max_value, 2)}',
+                         fontsize=12)  # add label max value line
+                plt.axhline(y=mean_value, color='cornflowerblue', linestyle='--', linewidth=1)  # add line for mean value
+                plt.text(.7, mean_value, f'Mean: {round(mean_value, 2)}', fontsize=12)  # add label mean value line
+                plt.axhline(y=minimum_value, color='#b81121', linestyle='--', linewidth=1)  # add line for minimum value
+                plt.text(1.7, minimum_value, f'Min: {round(minimum_value, 2)}', fontsize=12)  # add label minimum value line
                 screen.ids.chart_box.clear_widgets()  # remove the old chart
                 screen.ids.chart_box.add_widget(FigureCanvasKivyAgg(plt.gcf()))  # add the new chart
 
