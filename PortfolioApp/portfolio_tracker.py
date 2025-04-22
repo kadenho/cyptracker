@@ -1,6 +1,8 @@
 import re
 from datetime import datetime, date, timedelta, time
 
+import mysql.connector.errors
+import sqlalchemy
 from kivy.app import App
 from kivy.uix.button import Button
 from kivy.uix.label import Label
@@ -9,7 +11,10 @@ from kivy.properties import StringProperty, NumericProperty, ColorProperty
 from kivy.uix.popup import Popup
 from kivy.core.window import Window
 from kivy.uix.spinner import SpinnerOption
-from sqlalchemy.exc import SQLAlchemyError
+from kivy.uix.textinput import TextInput
+from kivy_garden.matplotlib import FigureCanvasKivyAgg
+from matplotlib import pyplot as plt
+from sqlalchemy.exc import SQLAlchemyError, DataError
 
 from HistoricalPriceViewer.main import coin_gecko_api
 from Tokenstaller.cryptos import CryptoDatabase, Crypto, PortfolioEntry, CryptoPrice
@@ -97,7 +102,7 @@ class PortfolioTrackerApp(App):
 
     def __init__(self, **kwargs):
         super(PortfolioTrackerApp, self).__init__(**kwargs)
-        password = input('What is the password to your MySQL server?')
+        password = input('What is your MySQL server password?')
         url = CryptoDatabase.construct_mysql_url('localhost', 3306, 'cryptos', 'root', password)
         self.crypto_database = CryptoDatabase(url)
         self.session = self.crypto_database.create_session()
@@ -109,7 +114,8 @@ class PortfolioTrackerApp(App):
         inspector.create_inspector(Window, self)  # For inspection (press control-e to toggle).
 
     def change_screen(self, screen):
-        self.root.current = screen
+        if screen != '':
+            self.root.current = screen
 
     def change_color(self, variable, color):
         if '.' not in color:
@@ -181,7 +187,7 @@ class PortfolioTrackerApp(App):
                 ids.append(cryptos[i].crypto_id)
         except SQLAlchemyError:
             self.session.rollback()
-            self.title_text = 'Database Error, make sure your port, username, and password are correct'
+            self.title_text = 'Invalid Password. Please restart with the right password'
 
         return ids
 
@@ -198,7 +204,7 @@ class PortfolioTrackerApp(App):
                 entry_info.append(str(entries[i].entry_id))
         except SQLAlchemyError:
             self.session.rollback()
-            self.title_text = 'Database Error, make sure your port, username, and password are correct'
+            self.title_text = 'Invalid Password. Please restart with the right password'
 
         return entry_info
 
@@ -219,6 +225,25 @@ class PortfolioTrackerApp(App):
         popup.bind(on_dismiss=lambda instance: self.change_screen(next_screen))
         popup.bind(on_open=lambda instance: popup_update_text_size(instance))
         return
+
+    def display_pie_chart(self, crypto_quantities):
+        plt.clf()  # clear the current plot
+        crypto_ids = [crypto_id for crypto_id in crypto_quantities]
+        current_holdings = [crypto_quantities[crypto_id][2] for crypto_id in crypto_quantities]
+        self.generate_chart(crypto_ids, current_holdings)  # generate the chart
+
+    def generate_chart(self, crypto_ids, holdings):
+        """
+        Take the crypto_ids and current holdings and generate a pie chart for the screen
+        """
+        labels = crypto_ids  # set the labels to be the crypto_ids
+        values = holdings  # set the values to the current holdings of a crypto
+
+        fig, ax = plt.subplots()
+        ax.pie(values, labels=labels, autopct='%1.1f%%')
+        plt.title('Current Holdings')  # title the chart
+        self.root.ids.pie_chart_box.clear_widgets()  # remove the old chart
+        self.root.ids.pie_chart_box.add_widget(FigureCanvasKivyAgg(plt.gcf()))  # add the new chart
 
     def add_crypto(self, name, symbol):
         """
@@ -266,12 +291,20 @@ class PortfolioTrackerApp(App):
         self.display_popup('Entry Added', 'Crypto entry added.', 'Menu')
 
     def add_crypto_price(self, crypto_id, timestamp, price):
-        crypto_price = CryptoPrice(crypto_id=crypto_id, timestamp=timestamp, price=price)
+        """
+
+        :param crypto_id:
+        :param timestamp:
+        :param price: Price in dollars
+        :return:
+        """
+        crypto_price = CryptoPrice(crypto_id=crypto_id, timestamp=timestamp, price=price * 100)
         self.session.add(crypto_price)
         self.session.commit()
+        print(f'crypto price committed {crypto_price.crypto_id, crypto_price.timestamp, crypto_price.price}')
 
     def modify_portfolio_entry(self, crypto_id=None, entry_date=None, quantity=None, operation=None, entry_id=None,
-                               user_id=None):
+                               ):
         """
         Either adds, updates, or deletes a portfolio entry to the database using its id, a date, and a quantity
         :param crypto_id: id of the crypto
@@ -407,42 +440,76 @@ class PortfolioTrackerApp(App):
         previous_value_check = self.session.query(ValueCheck)[count - 1] if not is_first_value_check else None
         total_value = 0
         total_initial_investment = 0
-        entries = self.session.query(PortfolioEntry)
-        # Dict of entry.crypto_id: entry.quantity
-        crypto_quantities = dict()
-
-        for entry in entries:
-            total_initial_investment += entry.investment
-            crypto_quantities.setdefault(entry.crypto_id, 0)
-            crypto_quantities[entry.crypto_id] += entry.quantity
+        crypto_quantities = self.get_quantities_and_investments(timestamp)
+        print(crypto_quantities)
         for crypto_id in crypto_quantities:
+            total_initial_investment += crypto_quantities[crypto_id][0] * crypto_quantities[crypto_id][1]
+            total_value += round(crypto_quantities[crypto_id][0] * crypto_quantities[crypto_id][2])
+
+        change_from_previous = None
+
+        if not is_first_value_check:
+            previous_value = previous_value_check.total_value
+            change_from_previous = 100 * (total_value - previous_value) // abs(
+                previous_value) if previous_value != 0 else 0
+
+        change_from_investment = 100 * (total_value - total_initial_investment) // abs(
+            total_initial_investment) if total_initial_investment != 0 else 0
+        value_check = ValueCheck(timestamp=timestamp, total_value=total_value,
+                                 change_from_previous=change_from_previous,
+                                 user_id=self.user_id, change_from_investment=change_from_investment)
+        try:
+            self.session.add(value_check)
+            self.session.commit()
+        except sqlalchemy.exc.DataError as data_error:
+            print(data_error)
+            self.session.rollback()
+            self.display_popup('Data out of Range',
+                               'The total value of your portfolio was beyond what the database can store.',
+                               '')
+            total_value = 2 ** 31 - 1
+            value_check = ValueCheck(timestamp=timestamp, total_value=total_value,
+                                     change_from_previous=change_from_previous,
+                                     user_id=self.user_id, change_from_investment=change_from_investment)
+            self.session.add(value_check)
+            self.session.commit()
+        self.portfolio_report_date = str(timestamp.date())
+        self.portfolio_report_total = total_value
+        self.portfolio_report_previous_date = str(
+            previous_value_check.timestamp.date()) if previous_value_check is not None else 'N/A'
+        self.portfolio_report_change_from_previous = 0 if is_first_value_check else round(change_from_previous)
+        self.display_pie_chart(crypto_quantities)
+
+    def get_quantities_and_investments(self, timestamp):
+        """
+        Returns a dictionary of 'crypto_id' string keys and [quantity, total investment, total held] list values
+        Note: both total investment and total held should be integers in cents
+        :param timestamp: Timestamp to base the 'total held' element of the tuple off. Should be the current time.
+        :return:
+        """
+        entries = self.session.query(PortfolioEntry).filter(PortfolioEntry.user_id == self.user_id)
+        # Dict of entry.crypto_id: (total quantity, total investment, total held)
+        crypto_quantities_prices = dict()
+        # Populate dictionary with every crypto in the user's portfolio and set their quantity and initial investment
+        for entry in entries:
+            crypto_quantities_prices.setdefault(entry.crypto_id, [0, 0, 0])
+            crypto_quantities_prices[entry.crypto_id][0] += entry.quantity
+            crypto_quantities_prices[entry.crypto_id][1] += entry.investment
+        # Set the price held at the timestamp for each crypto
+        for crypto_id in crypto_quantities_prices:
             crypto_price = self.session.query(CryptoPrice).filter(
                 CryptoPrice.crypto_id == crypto_id and timestamp == timestamp)
+            # Add new price to database if none are found at the current time
             if crypto_price.count() == 0:
                 price = coin_gecko_api.get_price(crypto_id, 'usd')
                 current_price = CryptoPrice(crypto_id=crypto_id, timestamp=timestamp, price=price)
                 self.session.add(current_price)
                 self.session.commit()
-                total_value += current_price.price * crypto_quantities[crypto_id] / 100
             else:
-                total_value += crypto_price.first().price * crypto_quantities[crypto_id] / 100
+                current_price = crypto_price.first().price
+            crypto_quantities_prices[crypto_id][2] = crypto_quantities_prices[crypto_id][0] * current_price
 
-            change_from_previous = None
-        if not is_first_value_check:
-            previous_value = previous_value_check.total_value
-            change_from_previous = 100 * (total_value - previous_value) / abs(previous_value) if previous_value != 0 else 0
-
-        change_from_investment = 100 * (total_value - total_initial_investment) / abs(
-            total_initial_investment) if total_initial_investment != 0 else 0
-        value_check = ValueCheck(timestamp=timestamp, total_value=total_value, change_from_previous=change_from_previous,
-                                 user_id=self.user_id, change_from_investment=change_from_investment)
-        self.session.add(value_check)
-        self.session.commit()
-        self.portfolio_report_date = str(timestamp.date())
-        self.portfolio_report_total = total_value
-        self.portfolio_report_previous_date = str(
-            previous_value_check.timestamp.date()) if previous_value_check is not None else 'N/A'
-        self.portfolio_report_change_from_previous = None if is_first_value_check else round(change_from_previous)
+        return crypto_quantities_prices
 
 
 class CustomButton(Button):
