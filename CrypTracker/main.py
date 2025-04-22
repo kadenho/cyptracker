@@ -349,9 +349,20 @@ class CrypTrackerApp(App):
         timestamps = []
         values = []
         screen = self.root.get_screen('ViewHistoryScreen')
+        max_previous_time = self.get_max_date()
+        for value in screen.crypto_values:
+            if value[0] >= max_previous_time:
+                timestamps.append(value[0])  # separate tuples into timestamps
+                values.append(value[1] * 0.01)
+        graph = self.generate_chart(timestamps, values)  # generate the chart
+        screen.ids.chart_box.clear_widgets()  # remove olds charts
+        screen.ids.chart_box.add_widget(FigureCanvasKivyAgg(graph))  # add new graph
+
+    def get_max_date(self):
+        screen = self.root.get_screen('ViewHistoryScreen')
         match screen.graph_range:
             case 'quarter':
-                max_previous_time = datetime(2024, 11, 1, 23, 59, 59)
+                max_previous_time = datetime(2024, 11, 1, 23, 59, 59)  # timestamp hard coded until api implementation
             case 'month':
                 max_previous_time = datetime(2025, 1, 1, 23, 59,
                                              59)  # timestamp hard coded until api implementation
@@ -364,13 +375,7 @@ class CrypTrackerApp(App):
             case _:
                 'Error: invalid graph range. Exiting program.'
                 sys.exit(1)
-        for value in screen.crypto_values:
-            if value[0] >= max_previous_time:
-                timestamps.append(value[0])  # separate tuples into timestamps
-                values.append(value[1] * 0.01)
-        graph = self.generate_chart(timestamps, values)  # generate the chart
-        screen.ids.chart_box.clear_widgets()  # remove olds charts
-        screen.ids.chart_box.add_widget(FigureCanvasKivyAgg(graph))  # add new graph
+        return max_previous_time
 
     def generate_chart(self, timestamps, values):
         """
@@ -468,8 +473,16 @@ class CrypTrackerApp(App):
 
     def export_to_csv(self):
         screen = self.root.get_screen('ViewHistoryScreen')
-        file_name = f'{str(datetime.now())}_{screen.crypto_name.replace(" ", "_")}.csv'
-        print(file_name)
+        file_name = (f'{screen.crypto_id.replace(" ", "_")}_{screen.graph_range}_report_{str(datetime.now().date()).replace("-", "_")}_{str(datetime.now().hour)}_'
+                     f'{str(datetime.now().minute)}_{str(datetime.now().second)}.csv')
+        max_date = self.get_max_date()
+        with open(file_name, 'w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(['Timestamp', 'Price'])
+            for value in screen.crypto_values:
+                if value[0] >= max_date:
+                    print(value)
+                    writer.writerow(value)
 
 if __name__ == '__main__':
     app = CrypTrackerApp()
