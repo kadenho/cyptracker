@@ -383,6 +383,10 @@ ScreenManager:
                         text: 'Candlestick Graph'
                         on_press:
                             app.display_candlestick_graph()
+                FormattedButton:
+                    text: 'Export to CSV'
+                    on_press:
+                        app.export_to_csv()
 
             BoxLayout:
                 size_hint: (1, 2)
