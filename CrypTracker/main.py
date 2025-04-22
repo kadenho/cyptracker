@@ -45,7 +45,7 @@ class ViewHistoryScreen(Screen):
     crypto_values = ListProperty()
     crypto_percent_change = StringProperty()
     graph_type = StringProperty('line')
-    graph_range = StringProperty('quarter')
+    graph_range = StringProperty('90_day')
 class CryptoWatchlistScreen(Screen):
     pass
 class Text(Label):
@@ -283,38 +283,38 @@ class CrypTrackerApp(App):
             screen.crypto_values.append(assembled_tuple)
         self.display_graph()
 
-    def display_quarter_graph(self):
+    def display_ninety_day_graph(self):
         """
-        Generate and display the chart for the month
-        """
-
-        screen = self.root.get_screen('ViewHistoryScreen')
-        screen.graph_range = 'quarter'
-        self.display_graph()
-
-    def display_month_graph(self):
-        """
-        Generate and display the chart for the month
+        Generate and display the chart for the past 90 days
         """
 
         screen = self.root.get_screen('ViewHistoryScreen')
-        screen.graph_range = 'month'
+        screen.graph_range = '90_day'
         self.display_graph()
 
-    def display_week_graph(self):
+    def display_thirty_day_graph(self):
         """
-        Generate and display the chart for the week
+        Generate and display the chart for the past 30 days
+        """
+
+        screen = self.root.get_screen('ViewHistoryScreen')
+        screen.graph_range = '30_day'
+        self.display_graph()
+
+    def display_seven_day_graph(self):
+        """
+        Generate and display the chart for the past 7 days
         """
         screen = self.root.get_screen('ViewHistoryScreen')
-        screen.graph_range = 'week'
+        screen.graph_range = '7_day'
         self.display_graph()
 
-    def display_day_graph(self):
+    def display_one_day_graph(self):
         """
         Generate and display the chart for the day
         """
         screen = self.root.get_screen('ViewHistoryScreen')
-        screen.graph_range = 'day'
+        screen.graph_range = '1_day'
         self.display_graph()
 
     def display_line_graph(self):
@@ -361,15 +361,15 @@ class CrypTrackerApp(App):
     def get_max_date(self):
         screen = self.root.get_screen('ViewHistoryScreen')
         match screen.graph_range:
-            case 'quarter':
+            case '90_day':
                 max_previous_time = datetime(2024, 11, 1, 23, 59, 59)  # timestamp hard coded until api implementation
-            case 'month':
+            case '30_day':
                 max_previous_time = datetime(2025, 1, 1, 23, 59,
                                              59)  # timestamp hard coded until api implementation
-            case 'week':
+            case '7_day':
                 max_previous_time = datetime(2025, 1, 22, 23, 59,
                                              59)  # timestamp hard coded until api implementation
-            case 'day':
+            case '1_day':
                 max_previous_time = datetime(2025, 1, 29, 23, 59,
                                              59)  # timestamp hard coded until api implementation
             case _:
