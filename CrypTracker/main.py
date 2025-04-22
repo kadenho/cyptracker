@@ -1,3 +1,5 @@
+import csv
+
 import pandas as pd
 from kivy.modules import inspector
 from kivy.core.window import Window
@@ -14,6 +16,8 @@ from kivy.uix.label import Label
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy_garden.matplotlib import FigureCanvasKivyAgg
 from matplotlib.dates import AutoDateLocator, ConciseDateFormatter
+from sqlalchemy.sql.functions import current_date
+
 from Tokenstaller.cryptos import CryptoDatabase, Crypto, CryptoPrice
 from pycoingecko import CoinGeckoAPI
 
@@ -277,7 +281,7 @@ class CrypTrackerApp(App):
         for crypto_value in selected_values:  # reassemble the values as a tuple
             assembled_tuple = (crypto_value.timestamp, crypto_value.price)
             screen.crypto_values.append(assembled_tuple)
-        self.display_month_graph()
+        self.display_graph()
 
     def display_quarter_graph(self):
         """
@@ -461,6 +465,11 @@ class CrypTrackerApp(App):
                 ax[0].yaxis.set_label_position("left")
                 ax[0].yaxis.tick_left()
                 return fig
+
+    def export_to_csv(self):
+        screen = self.root.get_screen('ViewHistoryScreen')
+        file_name = f'{str(datetime.now())}_{screen.crypto_name.replace(" ", "_")}.csv'
+        print(file_name)
 
 if __name__ == '__main__':
     app = CrypTrackerApp()
