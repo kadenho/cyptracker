@@ -357,6 +357,7 @@ class CrypTrackerApp(App):
         graph = self.generate_chart(timestamps, values)  # generate the chart
         screen.ids.chart_box.clear_widgets()  # remove olds charts
         screen.ids.chart_box.add_widget(FigureCanvasKivyAgg(graph))  # add new graph
+        plt.close(graph)
 
     def get_max_date(self):
         screen = self.root.get_screen('ViewHistoryScreen')
