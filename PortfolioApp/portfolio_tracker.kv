@@ -53,15 +53,6 @@ ScreenManager:
                     root.transition.direction = 'down'
                     root.current = 'Check Portfolio'
 
-            CustomButton:
-                text: 'Change Color'
-                text_color: (0.8, 0.8, 0.8, 1)
-                size_hint_x: 0.8
-                pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
-                on_press:
-                    root.transition.direction = 'left'
-                    root.current = 'Change Color'
-
     Screen:
         name: 'New Cryptocurrency'
 
@@ -466,14 +457,8 @@ ScreenManager:
                 valign: 'middle'
 
             Label:
-                text: 'Total Value'
-                text_size: self.size
-                halign: 'center'
-                valign: 'middle'
-
-            Label:
                 id: total_value
-                text: f'${app.portfolio_report_total/100:,.2f}'
+                text: f'Total Value: ${app.portfolio_report_total/100:,.2f}'
                 text_size: self.size
                 bold: True
                 color: app.text_color
@@ -498,14 +483,20 @@ ScreenManager:
                 valign: 'middle'
 
             Label:
-                text: 'Change From Last'
+                id: percent_change_from_last
+                text: f'{app.portfolio_report_change_from_previous:,}% from Previous Report'
+                color: app.text_color
                 text_size: self.size
+                outline_width: 1
+                bold: True
                 halign: 'center'
                 valign: 'middle'
+                on_text:
+                    self.color = text_color_from_value(self, -100, 100)
 
             Label:
-                id: percent_change
-                text: f'{app.portfolio_report_change_from_previous:,}% from previous report'
+                id: percent_change_from_investment
+                text: f'{app.portfolio_report_change_from_investment:,}% from Initial Investment'
                 color: app.text_color
                 text_size: self.size
                 outline_width: 1
@@ -562,39 +553,6 @@ ScreenManager:
                 on_press:
                     root.transition.direction =  'up'
                     root.current = 'Menu'
-
-    Screen
-        name: 'Change Color'
-
-        BoxLayout:
-            orientation: 'vertical'
-            size_hint: (1,0.25)
-            pos_hint: {'center': (0.5,0.4)}
-            padding: (0, 0, 0, 50)
-            spacing: 20
-
-            Spinner:
-                id: spinner_color
-                text: 'Color Property'
-                values: ['Background', 'Outline', 'Text', 'Button']
-                size_hint: (0.5,1.0)
-                pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
-
-            TextInput:
-                id: color_input
-                hint_text: '0.75, 0.25, 0.5, 1.0'
-                write_tab: False
-                multiline: False
-                on_text_validate:
-                    app.change_color(root.ids.spinner_color.text, self.text)
-
-        CustomButton:
-            text: 'Return to Menu'
-            pos_hint: {'center': (0.5,0.125)}
-            size_hint: (0.5, 0.125)
-            on_press:
-                root.transition.direction =  'right'
-                root.current = 'Menu'
 
 
 <Button>

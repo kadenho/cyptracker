@@ -14,6 +14,7 @@ from kivy.uix.spinner import SpinnerOption
 from kivy.uix.textinput import TextInput
 from kivy_garden.matplotlib import FigureCanvasKivyAgg
 from matplotlib import pyplot as plt
+from sqlalchemy import and_, desc
 from sqlalchemy.exc import SQLAlchemyError, DataError
 
 from HistoricalPriceViewer.main import coin_gecko_api
@@ -117,26 +118,6 @@ class PortfolioTrackerApp(App):
         if screen != '':
             self.root.current = screen
 
-    def change_color(self, variable, color):
-        if '.' not in color:
-            color = re.findall('d+', color)
-        else:
-            color = re.findall('d*.d+', color)
-        while len(color) < 4:
-            color.append(1.0)
-        color = [float(color[i]) for i in range(4)]
-        match variable:
-            case 'Background':
-                self.background_color = color
-            case 'Outline':
-                self.outline_color = color
-            case 'Text':
-                self.text_color = color
-            case 'Button':
-                color = color[0:3]
-                color.append(0)
-                self.button_color = color
-
     def delete_portfolio_page(self, entry_id=1):
         """
         Edits the text in the Delete Portfolio Entry screen in the .kv
@@ -230,7 +211,13 @@ class PortfolioTrackerApp(App):
         plt.clf()  # clear the current plot
         crypto_ids = [crypto_id for crypto_id in crypto_quantities]
         current_holdings = [crypto_quantities[crypto_id][2] for crypto_id in crypto_quantities]
-        self.generate_chart(crypto_ids, current_holdings)  # generate the chart
+        try:
+            self.generate_chart(crypto_ids, current_holdings)  # generate the chart
+        except ValueError:
+            self.display_popup('Value Error',
+                               'You currently have $0.00 in holdings, '
+                               'so a pie chart cannot be generated.',
+                               'Menu')
 
     def generate_chart(self, crypto_ids, holdings):
         """
@@ -299,6 +286,10 @@ class PortfolioTrackerApp(App):
         :return:
         """
         crypto_price = CryptoPrice(crypto_id=crypto_id, timestamp=timestamp, price=price * 100)
+        # If an entry in crypto_prices with that timestamp and crypto already exists, exit
+        if self.session.query(CryptoPrice).filter(
+                and_(CryptoPrice.crypto_id == crypto_id, CryptoPrice.timestamp == timestamp)).count() == 0:
+            return
         self.session.add(crypto_price)
         self.session.commit()
         print(f'crypto price committed {crypto_price.crypto_id, crypto_price.timestamp, crypto_price.price}')
@@ -364,7 +355,7 @@ class PortfolioTrackerApp(App):
         if operation == 'Add' or operation == 'Update':
             # Add a price entry for the given date if none are found in the Database
             if self.session.query(CryptoPrice).filter(
-                    CryptoPrice.timestamp == entry_date and CryptoPrice.crypto_id == crypto_id).count() == 0:
+                    and_(CryptoPrice.timestamp == entry_date, CryptoPrice.crypto_id == crypto_id)).count() == 0:
                 try:
                     historic_coin_data = coin_gecko_api.get_coin_history_by_id(crypto_id, adjusted_date)
                     price = historic_coin_data['market_data']['current_price']['usd']
@@ -381,7 +372,7 @@ class PortfolioTrackerApp(App):
 
             try:
                 investment = self.session.query(CryptoPrice).filter(
-                    CryptoPrice.crypto_id == crypto_id and CryptoPrice.timestamp == entry_date).first().price * int(
+                    CryptoPrice.crypto_id == crypto_id, CryptoPrice.timestamp == entry_date).first().price * int(
                     quantity)
             except SQLAlchemyError as error:
                 print(error)
@@ -441,10 +432,10 @@ class PortfolioTrackerApp(App):
         total_value = 0
         total_initial_investment = 0
         crypto_quantities = self.get_quantities_and_investments(timestamp)
-        print(crypto_quantities)
+        print(crypto_quantities, timestamp)
         for crypto_id in crypto_quantities:
-            total_initial_investment += crypto_quantities[crypto_id][0] * crypto_quantities[crypto_id][1]
-            total_value += round(crypto_quantities[crypto_id][0] * crypto_quantities[crypto_id][2])
+            total_initial_investment += crypto_quantities[crypto_id][1]
+            total_value += crypto_quantities[crypto_id][2]
 
         change_from_previous = None
 
@@ -478,6 +469,7 @@ class PortfolioTrackerApp(App):
         self.portfolio_report_previous_date = str(
             previous_value_check.timestamp.date()) if previous_value_check is not None else 'N/A'
         self.portfolio_report_change_from_previous = 0 if is_first_value_check else round(change_from_previous)
+        self.portfolio_report_change_from_investment = change_from_investment
         self.display_pie_chart(crypto_quantities)
 
     def get_quantities_and_investments(self, timestamp):
@@ -498,17 +490,15 @@ class PortfolioTrackerApp(App):
         # Set the price held at the timestamp for each crypto
         for crypto_id in crypto_quantities_prices:
             crypto_price = self.session.query(CryptoPrice).filter(
-                CryptoPrice.crypto_id == crypto_id and timestamp == timestamp)
+                and_(CryptoPrice.timestamp == timestamp, CryptoPrice.crypto_id == crypto_id))
             # Add new price to database if none are found at the current time
             if crypto_price.count() == 0:
-                price = coin_gecko_api.get_price(crypto_id, 'usd')
-                current_price = CryptoPrice(crypto_id=crypto_id, timestamp=timestamp, price=price)
-                self.session.add(current_price)
+                price = 100 * round(coin_gecko_api.get_price(crypto_id, 'usd')[crypto_id]['usd'], 2)
+                self.add_crypto_price(crypto_id, timestamp, price)
                 self.session.commit()
-            else:
-                current_price = crypto_price.first().price
-            crypto_quantities_prices[crypto_id][2] = crypto_quantities_prices[crypto_id][0] * current_price
-
+            current_price = self.session.query(CryptoPrice).filter(CryptoPrice.crypto_id == crypto_id).order_by(desc(CryptoPrice.timestamp)).first()
+            print(current_price.timestamp)
+            crypto_quantities_prices[crypto_id][2] = crypto_quantities_prices[crypto_id][0] * current_price.price
         return crypto_quantities_prices
 
 
