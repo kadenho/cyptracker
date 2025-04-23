@@ -19,7 +19,6 @@ class PortfolioEntry(Persisted):
     timestamp = Column(DateTime, ForeignKey('crypto_prices.timestamp', ondelete='CASCADE'), nullable=False)
     crypto_id = Column(String(64), ForeignKey('crypto_prices.crypto_id', ondelete='CASCADE'), nullable=False)
     user_id = Column(Integer, ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False)
-    funny_guy = Column(Integer)
     quantity = Column(Integer, nullable=False)
     investment = Column(Integer, nullable=False)
     user = relationship('User',
@@ -58,7 +57,8 @@ class ValueCheck(Persisted):
     timestamp = Column(DateTime, nullable=False)
     user_id = Column(Integer, ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False)
     total_value = Column(Integer, nullable=False)
-    percentage_change = Column(Integer, nullable=False)
+    change_from_previous = Column(Integer, nullable=True)
+    change_from_investment = Column(Integer, nullable=False)
     user = relationship('User', back_populates='value_checks')
 
 
