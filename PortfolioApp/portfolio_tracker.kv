@@ -4,6 +4,7 @@
 #:import text_color_from_value portfolio_tracker.text_color_from_value
 #:import popup_update_text_size portfolio_tracker.popup_update_text_size
 
+
 <PortfolioMenuScreen>
 
     Label:
@@ -144,6 +145,71 @@
             size_hint_x: 0.75
             on_press:
                 root.manager.current = 'Portfolio Menu'
+
+<DeleteCryptoCurrencyScreen>
+    Label:
+        text: 'Delete Cryptocurrency'
+        pos_hint: {'center': (0.5, 0.9)}
+        size_hint: (1.0,0.1)
+        font_size: 24
+        text_size: self.size
+        halign: 'center'
+        valign: 'middle'
+
+    BoxLayout:
+        orientation: 'vertical'
+        size_hint: (1,0.8)
+        pos_hint: {'center': (0.5,0.45)}
+        padding: (0, 0, 0, 0)
+        spacing: 10
+
+        Label:
+            text: 'Please select a cryptocurrency entry to delete.'
+            text_size: self.size
+            halign: 'center'
+            valign: 'middle'
+
+        Spinner:
+            id: spinner_delete_crypto
+            text: 'Crypto ID'
+            values: []
+            size_hint: (0.5,1.0)
+            pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
+            on_press:
+                self.values = app.crypto_ids
+            on_text:
+                # Call update_page method of the DeleteCryptocurrencyScreen class
+                self.parent.parent.update_page()
+
+        Label:
+            id: delete_crypto_name
+            text: 'Crypto Name'
+            color: app.outline_color
+            outline_color: app.text_color
+            size_hint: (0.5,1.0)
+            pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
+
+        Label:
+            id: delete_crypto_symbol
+            text: 'Crypto Symbol'
+            color: app.outline_color
+            outline_color: app.text_color
+            size_hint: (0.5,1.0)
+            pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
+
+        CustomButton:
+            text: 'Delete Cryptocurrency'
+            size_hint_x: 0.5
+            pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
+            on_press:
+                app.delete_crypto(root.ids.spinner_delete_crypto.text)
+
+        CustomButton:
+            text: 'Return to Portfolio Entries'
+            pos_hint: {'x': 0.125}
+            size_hint_x: 0.75
+            on_press:
+                root.manager.current = 'Manage Portfolio Entries'
 
 <ManagePortfolioEntriesScreen>
     Label:
@@ -288,13 +354,15 @@
 
         Spinner:
             id: spinner_update_portfolio
-            text: '1'
+            text: 'Entry ID'
             values: []
             size_hint: (0.5,1.0)
             pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
-            option_cls: 'PortfolioUpdateSpinner'
             on_press:
                 self.values = app.portfolio_info
+            on_text:
+            # Calls the update_page() method from UpdatePortfolioEntryScreen
+                self.parent.parent.update_page()
 
         Spinner:
             id: update_spinner_crypto_id
@@ -376,13 +444,14 @@
 
         Spinner:
             id: spinner_delete_portfolio
-            text: '1'
+            text: 'Entry ID'
             values: []
             size_hint: (0.5,1.0)
             pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
-            option_cls: 'PortfolioDeleteSpinner'
             on_press:
                 self.values = app.portfolio_info
+            on_text:
+                self.parent.parent.update_page()
 
         Label:
             id: delete_crypto_id
@@ -530,6 +599,13 @@
             on_press:
                 root.manager.current = 'Portfolio Menu'
 
+        CustomButton:
+            text: 'Fetch New Prices'
+            pos_hint: {'x': 0.125}
+            size_hint_x: 0.75
+            on_press:
+                app.add_value_check()
+
 <PieChartScreen>
     Label:
         text: 'Summary Details'
@@ -575,7 +651,6 @@
     valign: 'middle'
 
 <SpinnerOption>
-
     background_color: app.button_color
 
 <TextInput>
@@ -589,6 +664,10 @@
         Rectangle:
             pos: self.pos
             size: self.size
+    on_enter:
+        self.reset_page()
+    on_leave:
+        self.reset_page()
 
 <Label>
     font_size: 24

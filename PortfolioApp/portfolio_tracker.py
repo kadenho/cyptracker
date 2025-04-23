@@ -10,10 +10,9 @@ from kivy.properties import StringProperty, NumericProperty, ColorProperty
 from kivy.uix.popup import Popup
 from kivy.core.window import Window
 from kivy.uix.screenmanager import Screen, ScreenManager
-from kivy.uix.spinner import SpinnerOption
 from kivy_garden.matplotlib import FigureCanvasKivyAgg
 from matplotlib import pyplot as plt
-from sqlalchemy import and_, desc
+from sqlalchemy import desc, ForeignKeyConstraint
 from sqlalchemy.exc import SQLAlchemyError
 
 from HistoricalPriceViewer.main import coin_gecko_api
@@ -82,42 +81,107 @@ def popup_update_text_size(instance):
 
 
 class PortfolioMenuScreen(Screen):
-    pass
+    def reset_page(self):
+        pass
+
 
 class ManageCryptocurrenciesScreen(Screen):
-    pass
+    def reset_page(self):
+        pass
+
 
 class AddCryptocurrencyScreen(Screen):
-    pass
+    def reset_page(self):
+        self.ids.crypto_name.text = ''
+        self.ids.crypto_symbol.text = ''
 
 
 class DeleteCryptocurrencyScreen(Screen):
-    pass
+    def reset_page(self):
+        self.ids.spinner_delete_crypto.text = 'Crypto ID' if len(self.ids.spinner_delete_crypto.text) > 0 else 'No Cryptos'
+        self.ids.delete_crypto_name.text = 'Crypto Name'
+        self.ids.delete_crypto_symbol.text = 'Crypto Symbol'
+
+    def update_page(self):
+        print('updating DeleteCrypto screen')
+        spinner_text = self.ids.spinner_delete_crypto.text
+        if spinner_text == 'Crypto ID' or spinner_text == 'No Cryptos':
+            print('not updating')
+            return
+        crypto = app.session.query(Crypto).filter(Crypto.crypto_id == spinner_text).first()
+        self.ids.delete_crypto_name.text = crypto.name
+        self.ids.delete_crypto_symbol.text = crypto.symbol
 
 
 class ManagePortfolioEntriesScreen(Screen):
-    pass
+    def reset_page(self):
+        pass
 
 
 class AddPortfolioEntryScreen(Screen):
-    pass
+    def reset_page(self):
+        self.ids.spinner_crypto_id.text = 'Crypto ID'
+        self.ids.date_text.hint_text = 'YYYY-MM-DD'
+        self.ids.date_text.text = ''
+        self.ids.quantity_text.hint_text = '1'
+        self.ids.quantity_text.text = ''
 
 
 class UpdatePortfolioEntryScreen(Screen):
-    pass
+    def reset_page(self):
+        self.ids.spinner_update_portfolio.text = 'Entry ID' if len(app.portfolio_info) != 0 else 'No Entries'
+        self.ids.update_spinner_crypto_id.text = 'Crypto ID'
+        self.ids.update_date_text.hint_text = 'YYYY-MM-DD'
+        self.ids.update_date_text.text = ''
+        self.ids.update_quantity_text.hint_text = '1'
+        self.ids.update_quantity_text.text = ''
+
+    def update_page(self):
+        # Retrieve the entry with the same id as the user selects from the spinner
+        spinner_text = self.ids.spinner_update_portfolio.text
+        numbers_in_spinner_text = re.match('\d', spinner_text)
+        if numbers_in_spinner_text is None:
+            return
+        print(spinner_text, numbers_in_spinner_text)
+        entry = app.session.query(PortfolioEntry).filter(PortfolioEntry.entry_id == int(spinner_text)).first()
+        self.ids.update_spinner_crypto_id.text = entry.crypto_id
+        self.ids.update_date_text.hint_text = 'YYYY-MM-DD'
+        print(self.ids.update_date_text.text, entry.timestamp.date())
+        self.ids.update_date_text.text = str(entry.timestamp.date())
+        self.ids.update_quantity_text.hint_text = '1'
+        self.ids.update_quantity_text.text = str(entry.quantity)
 
 
 class DeletePortfolioEntryScreen(Screen):
-    pass
+    def reset_page(self):
+        self.ids.spinner_delete_portfolio.text = 'Entry ID' if len(app.portfolio_info) != 0 else 'No Entries'
+        self.ids.delete_crypto_id.text = 'Crypto ID'
+        self.ids.delete_date_text.text = 'YYYY-MM-DD'
+        self.ids.delete_quantity_text.text = '0'
 
+    def update_page(self):
+        # Retrieve the entry with the same id as the user selects from the spinner
+        spinner_text = self.ids.spinner_delete_portfolio.text
+        numbers_in_spinner_text = re.match('\d', spinner_text)
+        if numbers_in_spinner_text is None:
+            return
+        entry = app.session.query(PortfolioEntry).filter(PortfolioEntry.entry_id == int(spinner_text)).first()
+        self.ids.delete_crypto_id.text = entry.crypto_id
+        print(self.ids.delete_date_text.text, entry.timestamp.date())
+        self.ids.delete_date_text.text = str(entry.timestamp.date())
+        self.ids.delete_quantity_text.text = str(entry.quantity)
 
 class CheckPortfolioScreen(Screen):
+    def reset_page(self):
+        pass
+
     def on_enter(self):
         app.add_value_check()
 
 
 class PieChartScreen(Screen):
-    pass
+    def reset_page(self):
+        pass
 
 
 class PortfolioTrackerApp(App):
@@ -219,6 +283,8 @@ class PortfolioTrackerApp(App):
         popup.open()
         popup.bind(on_dismiss=lambda instance: self.change_screen(next_screen))
         popup.bind(on_open=lambda instance: popup_update_text_size(instance))
+        # Reset the data of the current page, needed for when next_screen is the current screen
+        self.root.get_screen(self.root.current).reset_page()
         return
 
     def display_pie_chart(self, crypto_quantities):
@@ -292,6 +358,18 @@ class PortfolioTrackerApp(App):
         self.session.commit()
         self.display_popup('Entry Added', 'Crypto entry added.', 'Portfolio Menu')
 
+    def delete_crypto(self, crypto_id):
+        deleted_crypto = self.session.query(Crypto).filter(Crypto.crypto_id == crypto_id).first()
+        try:
+            self.session.delete(deleted_crypto)
+            self.session.commit()
+        except SQLAlchemyError as error:
+            print(error)
+            self.display_popup("Can't Remove Crypto",
+                               'This crypto is currently used in a portfolio entry, '
+                               'so it cannot be deleted.',
+                               next_screen='Delete Cryptocurrency')
+
     def add_crypto_price(self, crypto_id, timestamp, price):
         """
 
@@ -302,12 +380,12 @@ class PortfolioTrackerApp(App):
         """
         crypto_price = CryptoPrice(crypto_id=crypto_id, timestamp=timestamp, price=price * 100)
         # If an entry in crypto_prices with that timestamp and crypto already exists, exit
-        if self.session.query(CryptoPrice).filter(
-                and_(CryptoPrice.crypto_id == crypto_id, CryptoPrice.timestamp == timestamp)).count() == 0:
+        print(344)
+        if self.session.query(CryptoPrice).filter(CryptoPrice.crypto_id == crypto_id).filter(
+                CryptoPrice.timestamp == timestamp).count() != 0:
             return
         self.session.add(crypto_price)
         self.session.commit()
-        print(f'crypto price committed {crypto_price.crypto_id, crypto_price.timestamp, crypto_price.price}')
 
     def modify_portfolio_entry(self, crypto_id=None, entry_date=None, quantity=None, operation=None, entry_id=None,
                                ):
@@ -331,7 +409,6 @@ class PortfolioTrackerApp(App):
                                    'Manage Portfolio Entries')
                 return
             self.session.delete(entry)
-            self.delete_portfolio_page(-1)
             self.session.commit()
             self.display_popup('Entry Deleted',
                                'Portfolio entry successfully deleted.',
@@ -370,8 +447,9 @@ class PortfolioTrackerApp(App):
         # Logic for adding or updating an entry
         if operation == 'Add' or operation == 'Update':
             # Add a price entry for the given date if none are found in the Database
-            if self.session.query(CryptoPrice).filter(
-                    and_(CryptoPrice.timestamp == entry_date, CryptoPrice.crypto_id == crypto_id)).count() == 0:
+            if self.session.query(CryptoPrice).filter(CryptoPrice.timestamp == entry_date).filter(
+                    CryptoPrice.crypto_id == crypto_id).count() == 0:
+                print('Line 415, no price entries for this crypto, should add some')
                 try:
                     historic_coin_data = coin_gecko_api.get_coin_history_by_id(crypto_id, adjusted_date)
                     price = historic_coin_data['market_data']['current_price']['usd']
@@ -385,10 +463,14 @@ class PortfolioTrackerApp(App):
                                        'This crypto did not exist at your selected date. Please select a later date.',
                                        f'{operation} Portfolio Entry')
                     return
-
+                print(self.session.query(CryptoPrice).filter(CryptoPrice.timestamp == entry_date).filter(
+                    CryptoPrice.crypto_id == crypto_id))
             try:
-                investment = self.session.query(CryptoPrice).filter(
-                    CryptoPrice.crypto_id == crypto_id, CryptoPrice.timestamp == entry_date).first().price * int(
+                prices = self.session.query(CryptoPrice).filter(CryptoPrice.crypto_id == crypto_id)
+                for price in prices:
+                    print(price.timestamp, entry_date, price.timestamp == entry_date)
+                investment = self.session.query(CryptoPrice).filter(CryptoPrice.crypto_id == crypto_id).filter(
+                    CryptoPrice.timestamp == entry_date).first().price * int(
                     quantity)
             except SQLAlchemyError as error:
                 print(error)
@@ -450,12 +532,14 @@ class PortfolioTrackerApp(App):
         crypto_quantities = self.get_quantities_and_investments(timestamp)
         print(crypto_quantities, timestamp)
         for crypto_id in crypto_quantities:
+            print(496)
             total_initial_investment += crypto_quantities[crypto_id][1]
             total_value += crypto_quantities[crypto_id][2]
 
         change_from_previous = None
 
         if not is_first_value_check:
+            print(503)
             previous_value = previous_value_check.total_value
             change_from_previous = 100 * (total_value - previous_value) // abs(
                 previous_value) if previous_value != 0 else 0
@@ -466,6 +550,7 @@ class PortfolioTrackerApp(App):
                                  change_from_previous=change_from_previous,
                                  user_id=self.user_id, change_from_investment=change_from_investment)
         try:
+            print(514)
             self.session.add(value_check)
             self.session.commit()
         except sqlalchemy.exc.DataError as data_error:
@@ -480,6 +565,7 @@ class PortfolioTrackerApp(App):
                                      user_id=self.user_id, change_from_investment=change_from_investment)
             self.session.add(value_check)
             self.session.commit()
+        print(529)
         self.portfolio_report_date = str(timestamp.date())
         self.portfolio_report_total = total_value
         self.portfolio_report_previous_date = str(
@@ -505,19 +591,21 @@ class PortfolioTrackerApp(App):
             crypto_quantities_prices[entry.crypto_id][1] += entry.investment
         # Set the price held at the timestamp for each crypto
         for crypto_id in crypto_quantities_prices:
-            crypto_price = self.session.query(CryptoPrice).filter(
-                and_(CryptoPrice.timestamp == timestamp, CryptoPrice.crypto_id == crypto_id))
+            crypto_price = self.session.query(CryptoPrice).filter(CryptoPrice.timestamp == timestamp).filter(
+                CryptoPrice.crypto_id == crypto_id)
             # Add new price to database if none are found at the current time
+            print(558)
             if crypto_price.count() == 0:
+                print(560)
                 price = 100 * round(coin_gecko_api.get_price(crypto_id, 'usd')[crypto_id]['usd'], 2)
                 self.add_crypto_price(crypto_id, timestamp, price)
                 self.session.commit()
-            current_price = self.session.query(CryptoPrice).filter(CryptoPrice.crypto_id == crypto_id).order_by(
-                desc(CryptoPrice.timestamp)).first()
-            print(current_price.timestamp)
+                print(564)
+            print(565)
+            current_price = self.session.query(CryptoPrice).filter(CryptoPrice.crypto_id == crypto_id).filter(
+                CryptoPrice.timestamp == timestamp).first()
             crypto_quantities_prices[crypto_id][2] = crypto_quantities_prices[crypto_id][0] * current_price.price
         return crypto_quantities_prices
-
 
 class CustomButton(Button):
     """
@@ -540,22 +628,6 @@ class CustomButton(Button):
             self.background_color = self.down_background_color
         else:
             self.background_color = self.default_background_color
-
-
-class PortfolioUpdateSpinner(SpinnerOption):
-    def __init__(self, **kwargs):
-        super(PortfolioUpdateSpinner, self).__init__(**kwargs)
-
-    def on_press(self):
-        app.update_portfolio_page(self.text)
-
-
-class PortfolioDeleteSpinner(SpinnerOption):
-    def __init__(self, **kwargs):
-        super(PortfolioDeleteSpinner, self).__init__(**kwargs)
-
-    def on_press(self):
-        app.delete_portfolio_page(self.text)
 
 
 if __name__ == '__main__':
