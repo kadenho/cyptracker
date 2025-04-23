@@ -140,11 +140,11 @@
                 app.add_crypto(name=root.ids.crypto_name.text, symbol=root.ids.crypto_symbol.text)
 
         CustomButton:
-            text: 'Return to Menu'
+            text: 'Return to Cryptocurrencies'
             pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
             size_hint_x: 0.75
             on_press:
-                root.manager.current = 'Portfolio Menu'
+                root.manager.current = 'Manage Cryptocurrencies'
 
 <DeleteCryptoCurrencyScreen>
     Label:
@@ -182,18 +182,30 @@
                 self.parent.parent.update_page()
 
         Label:
-            id: delete_crypto_name
             text: 'Crypto Name'
-            color: app.outline_color
-            outline_color: app.text_color
+            color: [0.0, 0.0, 0.0, 1.0]
+            size_hint: (0.5,1.0)
+            pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
+
+        Label:
+            id: delete_crypto_name
+            text: ''
+            color: [1.0, 1.0, 1.0, 1.0]
+            outline_color: [0.0, 0.0, 0.0, 1.0]
+            size_hint: (0.5,1.0)
+            pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
+
+        Label:
+            text: 'Crypto Symbol'
+            color: [0.0, 0.0, 0.0, 1.0]
             size_hint: (0.5,1.0)
             pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
 
         Label:
             id: delete_crypto_symbol
-            text: 'Crypto Symbol'
-            color: app.outline_color
-            outline_color: app.text_color
+            text: ''
+            color: [1.0, 1.0, 1.0, 1.0]
+            outline_color: [0.0, 0.0, 0.0, 1.0]
             size_hint: (0.5,1.0)
             pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
 
@@ -205,11 +217,11 @@
                 app.delete_crypto(root.ids.spinner_delete_crypto.text)
 
         CustomButton:
-            text: 'Return to Portfolio Entries'
+            text: 'Return to Cryptocurrencies'
             pos_hint: {'x': 0.125}
             size_hint_x: 0.75
             on_press:
-                root.manager.current = 'Manage Portfolio Entries'
+                root.manager.current = 'Manage Cryptocurrencies'
 
 <ManagePortfolioEntriesScreen>
     Label:
@@ -456,8 +468,8 @@
         Label:
             id: delete_crypto_id
             text: 'Crypto ID'
-            color: app.outline_color
-            outline_color: app.text_color
+            color: [1.0, 1.0, 1.0, 1.0]
+            outline_color: [0.0, 0.0, 0.0, 1.0]
             size_hint: (0.5,1.0)
             pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
 
@@ -470,8 +482,8 @@
         Label:
             id: delete_date_text
             text: 'YYYY-MM-DD'
-            color: app.outline_color
-            outline_color: app.text_color
+            color: [1.0, 1.0, 1.0, 1.0]
+            outline_color: [0.0, 0.0, 0.0, 1.0]
             size_hint_x: 0.8
             pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
 
@@ -484,8 +496,8 @@
         Label:
             id: delete_quantity_text
             text: '0'
-            color: app.outline_color
-            outline_color: app.text_color
+            color: [1.0, 1.0, 1.0, 1.0]
+            outline_color: [0.0, 0.0, 0.0, 1.0]
             size_hint_x: 0.8
             pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
 
@@ -540,7 +552,7 @@
             text: f'Total Value: ${app.portfolio_report_total/100:,.2f}'
             text_size: self.size
             bold: True
-            color: app.text_color
+            color: [0.0, 0.0, 0.0, 1.0]
             outline_width: 1
             halign: 'center'
             valign: 'middle'
@@ -564,7 +576,7 @@
         Label:
             id: percent_change_from_last
             text: f'{app.portfolio_report_change_from_previous:,}% from Previous Report'
-            color: app.text_color
+            color: [0.0, 0.0, 0.0, 1.0]
             text_size: self.size
             outline_width: 1
             bold: True
@@ -576,7 +588,7 @@
         Label:
             id: percent_change_from_investment
             text: f'{app.portfolio_report_change_from_investment:,}% from Initial Investment'
-            color: app.text_color
+            color: [0.0, 0.0, 0.0, 1.0]
             text_size: self.size
             outline_width: 1
             bold: True
@@ -645,13 +657,13 @@
             size: self.size
             pos: self.pos
             radius: [18]
-    background_color: app.button_color
+    background_color: [1.0, 1.0, 1.0, 0.0]
     text_size: self.size
     halign: 'center'
     valign: 'middle'
 
 <SpinnerOption>
-    background_color: app.button_color
+    background_color: [1.0, 1.0, 1.0, 0.0]
 
 <TextInput>
     write_tab: False
@@ -660,7 +672,7 @@
 <Screen>
     canvas.before:
         Color:
-            rgba: app.background_color
+            rgba: [0.0, 0.0, 0.0, 1.0]
         Rectangle:
             pos: self.pos
             size: self.size
@@ -672,5 +684,5 @@
 <Label>
     font_size: 24
     outline_width: 2
-    outline_color: app.outline_color
-    color: app.text_color
+    outline_color: [1.0, 1.0, 1.0, 1.0]
+    color: [0.0, 0.0, 0.0, 1.0]
