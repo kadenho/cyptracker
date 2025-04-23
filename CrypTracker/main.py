@@ -464,7 +464,7 @@ class CrypTrackerApp(App):
                     'Close': closing_prices
                 }
                 dataframe = pd.DataFrame(data, index=pd.DatetimeIndex(days_list))
-                fig, ax = mpf.plot(dataframe, type='candle', style='charles', title='Candlestick Chart', ylabel='Price', returnfig=True)
+                fig, ax = mpf.plot(dataframe, type='candle', style='charles', title=screen.crypto_name, ylabel='Price', returnfig=True)
                 ax[0].yaxis.set_label_position("left")
                 ax[0].yaxis.tick_left()
                 return fig
