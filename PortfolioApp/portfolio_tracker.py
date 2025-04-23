@@ -12,6 +12,7 @@ from kivy.core.window import Window
 from kivy.uix.screenmanager import Screen, ScreenManager
 from kivy_garden.matplotlib import FigureCanvasKivyAgg
 from matplotlib import pyplot as plt
+from sqlalchemy import and_
 from sqlalchemy.exc import SQLAlchemyError
 
 from HistoricalPriceViewer.main import coin_gecko_api
@@ -97,7 +98,8 @@ class AddCryptocurrencyScreen(Screen):
 
 class DeleteCryptocurrencyScreen(Screen):
     def reset_page(self):
-        self.ids.spinner_delete_crypto.text = 'Crypto ID' if len(self.ids.spinner_delete_crypto.text) > 0 else 'No Cryptos'
+        self.ids.spinner_delete_crypto.text = 'Crypto ID' if len(
+            self.ids.spinner_delete_crypto.text) > 0 else 'No Cryptos'
         self.ids.delete_crypto_name.text = ''
         self.ids.delete_crypto_symbol.text = ''
 
@@ -164,6 +166,7 @@ class DeletePortfolioEntryScreen(Screen):
         self.ids.delete_crypto_id.text = entry.crypto_id
         self.ids.delete_date_text.text = str(entry.timestamp.date())
         self.ids.delete_quantity_text.text = str(entry.quantity)
+
 
 class CheckPortfolioScreen(Screen):
     def reset_page(self):
@@ -523,7 +526,7 @@ class PortfolioTrackerApp(App):
         previous_value_check = self.session.query(ValueCheck)[count - 1] if not is_first_value_check else None
         total_value = 0
         total_initial_investment = 0
-        crypto_quantities = self.get_quantities_and_investments(timestamp)
+        crypto_quantities = self.get_quantities_and_investments()
         for crypto_id in crypto_quantities:
             total_initial_investment += crypto_quantities[crypto_id][1]
             total_value += crypto_quantities[crypto_id][2]
@@ -556,6 +559,7 @@ class PortfolioTrackerApp(App):
             self.session.add(value_check)
             self.session.commit()
         self.portfolio_report_date = str(timestamp.date())
+        print(total_value)
         self.portfolio_report_total = total_value
         self.portfolio_report_previous_date = str(
             previous_value_check.timestamp.date()) if previous_value_check is not None else 'N/A'
@@ -563,34 +567,41 @@ class PortfolioTrackerApp(App):
         self.portfolio_report_change_from_investment = change_from_investment
         self.display_pie_chart(crypto_quantities)
 
-    def get_quantities_and_investments(self, timestamp):
+    def get_quantities_and_investments(self):
         """
         Returns a dictionary of 'crypto_id' string keys and [quantity, total investment, total held] list values
         Note: both total investment and total held should be integers in cents
-        :param timestamp: Timestamp to base the 'total held' element of the tuple off. Should be the current time.
+        not made for the same time.
         :return:
         """
+        # stores the current time with seconds and microseconds set to 0, since coingecko updates prices per minute
+        current_time = datetime.now() - timedelta(seconds=datetime.now().second, microseconds=datetime.now().microsecond)
         entries = self.session.query(PortfolioEntry).filter(PortfolioEntry.user_id == self.user_id)
         # Dict of entry.crypto_id: (total quantity, total investment, total held)
         crypto_quantities_prices = dict()
         # Populate dictionary with every crypto in the user's portfolio and set their quantity and initial investment
         for entry in entries:
+            # Added that id to the dictionary with default values if not already included
             crypto_quantities_prices.setdefault(entry.crypto_id, [0, 0, 0])
             crypto_quantities_prices[entry.crypto_id][0] += entry.quantity
             crypto_quantities_prices[entry.crypto_id][1] += entry.investment
-        # Set the price held at the timestamp for each crypto
+        # Set the price held at the current time for each crypto
         for crypto_id in crypto_quantities_prices:
-            crypto_price = self.session.query(CryptoPrice).filter(CryptoPrice.timestamp == timestamp).filter(
-                CryptoPrice.crypto_id == crypto_id)
+            print(crypto_id)
+            crypto_price = self.session.query(CryptoPrice).filter(
+                and_(CryptoPrice.timestamp == current_time, CryptoPrice.crypto_id == crypto_id))
             # Add new price to database if none are found at the current time
             if crypto_price.count() == 0:
-                price = 100 * round(coin_gecko_api.get_price(crypto_id, 'usd')[crypto_id]['usd'], 2)
-                self.add_crypto_price(crypto_id, timestamp, price)
+                print(f'{crypto_id} has no price at f{current_time}')
+                price = round(coin_gecko_api.get_price(crypto_id, 'usd')[crypto_id]['usd'], 2)
+                self.add_crypto_price(crypto_id, current_time, price)
+                print(f'attempted to add price {price} dollars for {crypto_id} at {datetime.now()}')
                 self.session.commit()
-            current_price = self.session.query(CryptoPrice).filter(CryptoPrice.crypto_id == crypto_id).filter(
-                CryptoPrice.timestamp == timestamp).first()
+            current_price = self.session.query(CryptoPrice).filter(
+                and_(CryptoPrice.crypto_id == crypto_id, CryptoPrice.timestamp == current_time)).first()
             crypto_quantities_prices[crypto_id][2] = crypto_quantities_prices[crypto_id][0] * current_price.price
         return crypto_quantities_prices
+
 
 class CustomButton(Button):
     """
