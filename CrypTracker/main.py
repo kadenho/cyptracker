@@ -1,5 +1,4 @@
 import csv
-
 import pandas as pd
 from kivy.modules import inspector
 from kivy.core.window import Window
@@ -16,11 +15,9 @@ from kivy.uix.label import Label
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy_garden.matplotlib import FigureCanvasKivyAgg
 from matplotlib.dates import AutoDateLocator, ConciseDateFormatter
-from sqlalchemy.sql.functions import current_date
 
 from Tokenstaller.cryptos import CryptoDatabase, Crypto, CryptoPrice
 from pycoingecko import CoinGeckoAPI
-
 coin_gecko_api = CoinGeckoAPI()
 
 class UserLoginScreen(Screen):
@@ -482,7 +479,6 @@ class CrypTrackerApp(App):
             writer.writerow(['Timestamp', 'Price'])
             for value in screen.crypto_values:
                 if value[0] >= max_date:
-                    print(value)
                     writer.writerow(value)
 
 if __name__ == '__main__':
