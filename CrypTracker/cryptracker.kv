@@ -352,30 +352,41 @@ ScreenManager:
                 orientation: 'vertical'
                 BoxLayout:
                     orientation: 'horizontal'
-
+                    FormattedButton:
+                        text: '90 Day Graph'
+                        on_press:
+                            app.display_ninety_day_graph()
                     FormattedButton:
                         text: '30 Day Graph'
                         on_press:
-                            app.display_month_chart()
-
+                            app.display_thirty_day_graph()
                     FormattedButton:
                         text: '7 Day Graph'
                         on_press:
-                            app.display_week_chart()
-
+                            app.display_seven_day_graph()
                     FormattedButton:
                         text: '1 Day Graph'
                         on_press:
-                            app.display_day_chart()
+                            app.display_one_day_graph()
                 BoxLayout:
                     orientation: 'horizontal'
 
                     FormattedButton:
                         text: 'Line Graph'
+                        on_press:
+                            app.display_line_graph()
                     FormattedButton:
                         text: 'Bar Graph'
+                        on_press:
+                            app.display_bar_graph()
                     FormattedButton:
                         text: 'Candlestick Graph'
+                        on_press:
+                            app.display_candlestick_graph()
+                FormattedButton:
+                    text: 'Export to CSV'
+                    on_press:
+                        app.export_to_csv()
 
             BoxLayout:
                 size_hint: (1, 2)

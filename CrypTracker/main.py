@@ -1,3 +1,6 @@
+import csv
+
+import pandas as pd
 from kivy.modules import inspector
 from kivy.core.window import Window
 import sys
@@ -5,6 +8,7 @@ from datetime import datetime
 import sqlalchemy
 from kivy.app import App
 import matplotlib.pyplot as plt
+import mplfinance as mpf
 from kivy.properties import StringProperty, ListProperty
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
@@ -12,6 +16,8 @@ from kivy.uix.label import Label
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy_garden.matplotlib import FigureCanvasKivyAgg
 from matplotlib.dates import AutoDateLocator, ConciseDateFormatter
+from sqlalchemy.sql.functions import current_date
+
 from Tokenstaller.cryptos import CryptoDatabase, Crypto, CryptoPrice
 from pycoingecko import CoinGeckoAPI
 
@@ -38,10 +44,10 @@ class ViewHistoryScreen(Screen):
     crypto_name = StringProperty()
     crypto_values = ListProperty()
     crypto_percent_change = StringProperty()
+    graph_type = StringProperty('line')
+    graph_range = StringProperty('90_day')
 class CryptoWatchlistScreen(Screen):
     pass
-
-
 class Text(Label):
     pass
 class FormattedButton(Button):
@@ -171,8 +177,7 @@ class CrypTrackerApp(App):
         """
         crypto_symbol = crypto.symbol  # retrieve crypto's symbol
         crypto_name = crypto.name  # retrieve crypto's name
-        today_values = self.session.query(CryptoPrice).filter(CryptoPrice.crypto_id == current_id,
-                                                            # retrieve all of today's timestamps
+        today_values = self.session.query(CryptoPrice).filter(CryptoPrice.crypto_id == current_id, # retrieve all of today's timestamps
                                                             CryptoPrice.timestamp >= datetime(2025, 1,
                                                                                             30)).all()  # timestamp is hard coded for dummy data, once we use the api it will be changed
         if not today_values:  # ensure there is a price for today
@@ -276,9 +281,67 @@ class CrypTrackerApp(App):
         for crypto_value in selected_values:  # reassemble the values as a tuple
             assembled_tuple = (crypto_value.timestamp, crypto_value.price)
             screen.crypto_values.append(assembled_tuple)
-        self.display_month_chart()
+        self.display_graph()
 
-    def display_chart(self, max_previous_time):
+    def display_ninety_day_graph(self):
+        """
+        Generate and display the chart for the past 90 days
+        """
+
+        screen = self.root.get_screen('ViewHistoryScreen')
+        screen.graph_range = '90_day'
+        self.display_graph()
+
+    def display_thirty_day_graph(self):
+        """
+        Generate and display the chart for the past 30 days
+        """
+
+        screen = self.root.get_screen('ViewHistoryScreen')
+        screen.graph_range = '30_day'
+        self.display_graph()
+
+    def display_seven_day_graph(self):
+        """
+        Generate and display the chart for the past 7 days
+        """
+        screen = self.root.get_screen('ViewHistoryScreen')
+        screen.graph_range = '7_day'
+        self.display_graph()
+
+    def display_one_day_graph(self):
+        """
+        Generate and display the chart for the day
+        """
+        screen = self.root.get_screen('ViewHistoryScreen')
+        screen.graph_range = '1_day'
+        self.display_graph()
+
+    def display_line_graph(self):
+        """
+        Generate and display a line graph
+        """
+        screen = self.root.get_screen('ViewHistoryScreen')
+        screen.graph_type = 'line'
+        self.display_graph()
+
+    def display_bar_graph(self):
+        """
+        Generate and display a line graph
+        """
+        screen = self.root.get_screen('ViewHistoryScreen')
+        screen.graph_type = 'bar'
+        self.display_graph()
+
+    def display_candlestick_graph(self):
+        """
+        Generate and display a line graph
+        """
+        screen = self.root.get_screen('ViewHistoryScreen')
+        screen.graph_type = 'candlestick'
+        self.display_graph()
+
+    def display_graph(self):
         """
         Create and display the chart for the history screen with given max_date
         """
@@ -286,29 +349,34 @@ class CrypTrackerApp(App):
         timestamps = []
         values = []
         screen = self.root.get_screen('ViewHistoryScreen')
+        max_previous_time = self.get_max_date()
         for value in screen.crypto_values:
             if value[0] >= max_previous_time:
                 timestamps.append(value[0])  # separate tuples into timestamps
                 values.append(value[1] * 0.01)
-        self.generate_chart(timestamps, values)  # generate the chart
+        graph = self.generate_chart(timestamps, values)  # generate the chart
+        screen.ids.chart_box.clear_widgets()  # remove olds charts
+        screen.ids.chart_box.add_widget(FigureCanvasKivyAgg(graph))  # add new graph
+        plt.close(graph)
 
-    def display_month_chart(self):
-        """
-        Generate and display the chart for the month
-        """
-        self.display_chart(datetime(2025, 1, 1, 23, 59, 59))  # timestamp hard coded until api implementation
-
-    def display_week_chart(self):
-        """
-        Generate and display the chart for the week
-        """
-        self.display_chart(datetime(2025, 1, 22, 23, 59, 59))  # timestamp hard coded until api implementation
-
-    def display_day_chart(self):
-        """
-        Generate and display the chart for the day
-        """
-        self.display_chart(datetime(2025, 1, 29, 23, 59, 59))  # timestamp hard coded until api implementation
+    def get_max_date(self):
+        screen = self.root.get_screen('ViewHistoryScreen')
+        match screen.graph_range:
+            case '90_day':
+                max_previous_time = datetime(2024, 11, 1, 23, 59, 59)  # timestamp hard coded until api implementation
+            case '30_day':
+                max_previous_time = datetime(2025, 1, 1, 23, 59,
+                                             59)  # timestamp hard coded until api implementation
+            case '7_day':
+                max_previous_time = datetime(2025, 1, 22, 23, 59,
+                                             59)  # timestamp hard coded until api implementation
+            case '1_day':
+                max_previous_time = datetime(2025, 1, 29, 23, 59,
+                                             59)  # timestamp hard coded until api implementation
+            case _:
+                'Error: invalid graph range. Exiting program.'
+                sys.exit(1)
+        return max_previous_time
 
     def generate_chart(self, timestamps, values):
         """
@@ -318,29 +386,104 @@ class CrypTrackerApp(App):
         mean_value = sum(values)/(len(values))
         minimum_value = min(values)
         screen = self.root.get_screen('ViewHistoryScreen')
-        plt.plot(timestamps, values)  # plot the data
-        plt.xlabel('Timestamp')  # label the x-axis
-        plt.xticks(rotation=30)  # rotate the labels 30 degrees
-        plt.gca().xaxis.set_major_locator(AutoDateLocator())  # finds the optimal tick locations
-        plt.gca().xaxis.set_major_formatter(
-            ConciseDateFormatter(AutoDateLocator()))  # finds the optimal way to label the dates
-        plt.ylabel('Price')  # label the y-axis
-        plt.grid()
-        plt.axhline(y=max_value, color='#158a41', linestyle='--', linewidth=1) # add line for max value
-        plt.text(timestamps[0], max_value, f'Max: {round(max_value,2)}', fontsize = 12) # add label max value line
-        plt.axhline(y=mean_value, color='cornflowerblue', linestyle='--', linewidth=1)  # add line for mean value
-        plt.text(timestamps[0], mean_value, f'Mean: {round(mean_value, 2)}', fontsize=12)  # add label mean value line
-        plt.axhline(y=minimum_value, color='#b81121', linestyle='--', linewidth=1)  # add line for minimum value
-        plt.text(timestamps[0], minimum_value, f'Min: {round(minimum_value, 2)}', fontsize=12)  # add label minimum value line
-        if values[0] > values[-1]:  # determine if price went down over course of the chart
-            plt.gca().get_lines()[0].set_color("#b81121") # set color red
-        elif values[0] < values[-1]:  # determine if price went up over course of the chart
-            plt.gca().get_lines()[0].set_color("#158a41")  # set color green
-        else:  # price stayed the same over course of the chart
-            plt.gca().get_lines()[0].set_color("cornflowerblue")  # set color blue
-        plt.title(screen.crypto_name)  # title the graph
-        screen.ids.chart_box.clear_widgets()  # remove the old chart
-        screen.ids.chart_box.add_widget(FigureCanvasKivyAgg(plt.gcf()))  # add the new chart
+        match screen.graph_type:
+            case 'line':
+                plt.style.use('default')
+                plt.plot(timestamps, values)  # plot the data
+                plt.xlabel('Timestamp')  # label the x-axis
+                plt.xticks(rotation=30)  # rotate the labels 30 degrees
+                plt.gca().xaxis.set_major_locator(AutoDateLocator())  # finds the optimal tick locations
+                plt.gca().xaxis.set_major_formatter(
+                    ConciseDateFormatter(AutoDateLocator()))  # finds the optimal way to label the dates
+                plt.ylabel('Price')  # label the y-axis
+                plt.grid()
+                plt.axhline(y=max_value, color='#158a41', linestyle='--', linewidth=1) # add line for max value
+                plt.text(timestamps[0], max_value, f'Max: {round(max_value,2)}', fontsize = 12) # add label max value line
+                plt.axhline(y=mean_value, color='cornflowerblue', linestyle='--', linewidth=1)  # add line for mean value
+                plt.text(timestamps[0], mean_value, f'Mean: {round(mean_value, 2)}', fontsize=12)  # add label mean value line
+                plt.axhline(y=minimum_value, color='#b81121', linestyle='--', linewidth=1)  # add line for minimum value
+                plt.text(timestamps[0], minimum_value, f'Min: {round(minimum_value, 2)}', fontsize=12)  # add label minimum value line
+                if values[0] > values[-1]:  # determine if price went down over course of the chart
+                    plt.gca().get_lines()[0].set_color("#b81121") # set color red
+                elif values[0] < values[-1]:  # determine if price went up over course of the chart
+                    plt.gca().get_lines()[0].set_color("#158a41")  # set color green
+                else:  # price stayed the same over course of the chart
+                    plt.gca().get_lines()[0].set_color("cornflowerblue")  # set color blue
+                plt.title(screen.crypto_name)  # title the graph
+                return plt.gcf()
+            case 'bar':
+                categories = ['Max', 'Mean', 'Min']
+                colors = ['#158a41', 'cornflowerblue', '#b81121']
+                plt.style.use('default')
+                plt.bar(categories, [max_value, mean_value, minimum_value], color=colors)
+                plt.ylabel('Price')
+                plt.title(screen.crypto_name)  # title the graph
+                plt.axhline(y=max_value, color='#158a41', linestyle='--', linewidth=1)  # add line for max value
+                plt.text(-0.3, max_value, f'Max: {round(max_value, 2)}',
+                         fontsize=12)  # add label max value line
+                plt.axhline(y=mean_value, color='cornflowerblue', linestyle='--', linewidth=1)  # add line for mean value
+                plt.text(.7, mean_value, f'Mean: {round(mean_value, 2)}', fontsize=12)  # add label mean value line
+                plt.axhline(y=minimum_value, color='#b81121', linestyle='--', linewidth=1)  # add line for minimum value
+                plt.text(1.7, minimum_value, f'Min: {round(minimum_value, 2)}', fontsize=12)  # add label minimum value line
+                return plt.gcf()
+            case 'candlestick':
+                timestamps_dict = {} # Arrange timestamps and values into a dictionary to be used in candlestick graph
+                for i in range(len(timestamps)):
+                    timestamps_dict[timestamps[i]] = values[i]
+                days_list = []
+                for key in timestamps_dict:
+                    if datetime(year=key.year, month=key.month, day=key.day) not in days_list:
+                        days_list.append(key)
+
+                opening_prices = []
+                closing_prices = []
+                average_prices = []
+                highest_prices = []
+                lowest_prices = []
+                for day in days_list: # for each day in our list
+                    day_timestamps = [] # holds all the timestamps that occur on that day
+                    for key in timestamps_dict:
+                        if datetime(year=key.year, month=key.month, day=key.day) == day: # check if timestamp occurs on that day
+                            day_timestamps.append(key) # if it does, append it to our list.
+                    day_timestamps.sort() # ensure the timestamps are sorted chronologically
+                    day_sum = 0
+                    highest_price = timestamps_dict[day_timestamps[0]] # set the default highest price
+                    lowest_price = timestamps_dict[day_timestamps[0]] # set the default lowest price
+                    for timestamp in day_timestamps: # for each timestamp in my day's timestamp
+                        if timestamps_dict[timestamp] > highest_price: # if we have a new highest price
+                            highest_price = timestamps_dict[timestamp] # update highest price
+                        if timestamps_dict[timestamp] < lowest_price: # if we have a new lowest price
+                            lowest_price = timestamps_dict[timestamp] # update lowest price
+                        day_sum += timestamps_dict[timestamp] # increase the day's sum price
+                    average_prices.append(day_sum / len(day_timestamps)) # get average price
+                    highest_prices.append(highest_price)
+                    lowest_prices.append(lowest_price)
+                    opening_prices.append(timestamps_dict[day_timestamps[0]])
+                    closing_prices.append(timestamps_dict[day_timestamps[-1]])
+                data = {
+                    'Open': opening_prices,
+                    'High': highest_prices,
+                    'Low': lowest_prices,
+                    'Close': closing_prices
+                }
+                dataframe = pd.DataFrame(data, index=pd.DatetimeIndex(days_list))
+                fig, ax = mpf.plot(dataframe, type='candle', style='charles', title='Candlestick Chart', ylabel='Price', returnfig=True)
+                ax[0].yaxis.set_label_position("left")
+                ax[0].yaxis.tick_left()
+                return fig
+
+    def export_to_csv(self):
+        screen = self.root.get_screen('ViewHistoryScreen')
+        file_name = (f'{screen.crypto_id.replace(" ", "_")}_{screen.graph_range}_report_{str(datetime.now().date()).replace("-", "_")}_{str(datetime.now().hour)}_'
+                     f'{str(datetime.now().minute)}_{str(datetime.now().second)}.csv')
+        max_date = self.get_max_date()
+        with open(file_name, 'w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(['Timestamp', 'Price'])
+            for value in screen.crypto_values:
+                if value[0] >= max_date:
+                    print(value)
+                    writer.writerow(value)
 
 if __name__ == '__main__':
     app = CrypTrackerApp()
