@@ -27,7 +27,8 @@ from kivy_garden.matplotlib import FigureCanvasKivyAgg
 
 # Matplotlib
 from matplotlib import pyplot as plt
-import mplfinance as mpf
+    # Disables flooding the console with debug messages on graph render
+plt.set_loglevel (level = 'warning')
 
 # Your Modules
 from Tokenstaller.cryptos import Crypto, PortfolioEntry, CryptoPrice, ValueCheck, User, CryptoDatabase
@@ -35,6 +36,53 @@ from HistoricalPriceViewer.main import coin_gecko_api
 
 # External API
 from pycoingecko import CoinGeckoAPI
+
+def text_color_from_value(label, lower, upper):
+    """
+    Yields an RGBA list for color based on the value of a string (red for negative, green for positive, black for 0)
+    Currently, colors are based on
+    :param label: Label whose text and color will be changed
+    :param lower: The highest value to return pure red [1, 0, 0, 1]
+    :param upper: The lowest value to return pure green [0, 1, 0, 1]
+    :return: RGBA list of colors between 0 and 1
+    >>> colored_text = Label(text='100',color=[0, 0, 0, 1])
+    >>> test_app = CrypTrackerApp()
+    >>> text_color_from_value(colored_text, -100, 100)
+    [0.0, 1.0, 0.0, 1.0]
+    >>> color = [0.5, 0.0, 0.5, 1]
+    >>> colored_text = Label(text='50',color=color)
+    >>> test_app = CrypTrackerApp()
+    >>> text_color_from_value(colored_text, -100, 100)
+    [0.25, 0.5, 0.25, 1.0]
+    >>> color = [1.0, 1.0, 0.0, 1]
+    >>> colored_text = Label(text='-25',color=color)
+    >>> test_app = CrypTrackerApp()
+    >>> text_color_from_value(colored_text, -100, 100)
+    [1.0, 0.75, 0.0, 1.0]
+    >>> color = [1.0, 1.0, 1.0, 1]
+    >>> colored_text = Label(text='0.00',color=color)
+    >>> test_app = CrypTrackerApp()
+    >>> text_color_from_value(colored_text, -100, 100)
+    [1, 1, 1, 1]
+    """
+    # Have to copy text_color so that it is not carried over through the default parameter
+    text_color = list(label.color)
+    green = [0, 1, 0, 1]
+    red = [1, 0, 0, 1]
+    green_differentials = [green[i] - text_color[i] for i in range(4)]
+    # 0, 1, 0
+    red_differentials = [red[i] - text_color[i] for i in range(4)]
+    # Remove non-integers and store as an int
+    value = int(re.sub('[^0-9-]', '', label.text))
+    if value > 0:
+        value = min(value, upper)
+        for i in range(4):
+            text_color[i] += (value / upper) * green_differentials[i]
+    if value < 0:
+        value = max(value, lower)
+        for i in range(4):
+            text_color[i] += (value / lower) * red_differentials[i]
+    return text_color
 
 #Main App Screens
 class MySQLPasswordScreen(Screen):
@@ -577,10 +625,11 @@ class CrypTrackerApp(App):
         :param timestamp: Date of the value check, defaults to the current date.
         :return: None
         """
-        count = self.session.query(ValueCheck).count()
+        value_checks = self.session.query(ValueCheck).filter(ValueCheck.user_id == self.user_id)
+        number_of_value_checks = value_checks.count()
         # Boolean decides if percent_change should also compare against the previous value check or only initial investment
-        is_first_value_check = count == 0
-        previous_value_check = self.session.query(ValueCheck)[count - 1] if not is_first_value_check else None
+        is_first_value_check = number_of_value_checks == 0
+        previous_value_check = self.session.query(ValueCheck)[number_of_value_checks - 1] if not is_first_value_check else None
         total_value = 0
         total_initial_investment = 0
         crypto_quantities = self.get_quantities_and_investments()
@@ -645,15 +694,12 @@ class CrypTrackerApp(App):
             crypto_quantities_prices[entry.crypto_id][1] += entry.investment
         # Set the price held at the current time for each crypto
         for crypto_id in crypto_quantities_prices:
-            print(crypto_id)
             crypto_price = self.session.query(CryptoPrice).filter(
                 and_(CryptoPrice.timestamp == current_time, CryptoPrice.crypto_id == crypto_id))
             # Add new price to database if none are found at the current time
             if crypto_price.count() == 0:
-                print(f'{crypto_id} has no price at f{current_time}')
                 price = round(coin_gecko_api.get_price(crypto_id, 'usd')[crypto_id]['usd'], 2)
                 self.add_crypto_price(crypto_id, current_time, price)
-                print(f'attempted to add price {price} dollars for {crypto_id} at {datetime.now()}')
                 self.session.commit()
             current_price = self.session.query(CryptoPrice).filter(
                 and_(CryptoPrice.crypto_id == crypto_id, CryptoPrice.timestamp == current_time)).first()
@@ -1062,5 +1108,6 @@ class CustomButton(Button):
 
 
 if __name__ == '__main__':
+    Window.size = (400, 400*(16/9))
     app = CrypTrackerApp()
     app.run()
