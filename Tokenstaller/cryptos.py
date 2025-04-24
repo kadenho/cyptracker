@@ -10,7 +10,7 @@ class Crypto(Persisted):
     crypto_id = Column(String(64), primary_key=True)
     name = Column(String(256), nullable=False)
     symbol = Column(String(64), nullable=False)
-    prices = relationship('CryptoPrice', uselist=True, back_populates='crypto')
+    prices = relationship('CryptoPrice', uselist=True, back_populates='crypto', cascade='all, delete-orphan')
 
 
 class PortfolioEntry(Persisted):
@@ -44,7 +44,8 @@ class CryptoPrice(Persisted):
         'PortfolioEntry',
         back_populates='crypto_price',
         primaryjoin=
-        'and_(PortfolioEntry.timestamp==CryptoPrice.timestamp, ' 'PortfolioEntry.crypto_id==CryptoPrice.crypto_id)'
+        'and_(PortfolioEntry.timestamp==CryptoPrice.timestamp, ' 'PortfolioEntry.crypto_id==CryptoPrice.crypto_id)',
+        cascade='all, delete-orphan'
     )
     __table_args__ = (
         Index('idx_crypto_id', 'crypto_id'),

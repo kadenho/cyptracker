@@ -1,11 +1,9 @@
-from random import uniform, randint
 from sys import stderr
 
-from datetime import datetime, timedelta
 
 from sqlalchemy.exc import SQLAlchemyError
 
-from cryptos import CryptoDatabase, Crypto, CryptoPrice, PortfolioEntry, User
+from cryptos import CryptoDatabase, Crypto, User
 
 
 def add_starter_data(session):
