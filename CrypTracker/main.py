@@ -36,8 +36,8 @@ from Tokenstaller.cryptos import Crypto, PortfolioEntry, CryptoPrice, ValueCheck
 
 # External API
 from pycoingecko import CoinGeckoAPI
-
-coin_gecko_api = CoinGeckoAPI()
+from apikey import COINGECKO_API_KEY
+coin_gecko_api = CoinGeckoAPI(demo_api_key=COINGECKO_API_KEY)
 
 def text_color_from_value(label, lower, upper):
     """
