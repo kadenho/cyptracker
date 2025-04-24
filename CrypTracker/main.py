@@ -252,6 +252,7 @@ class CrypTrackerApp(App):
     #Main app buttons
     def on_login_button_press(self):
         screen = self.sm.get_screen('UserLoginScreen')
+        screen2 = self.sm.get_screen('MainDashboardScreen')
         spinner_text = screen.ids.username_selector_spinner.text
         if spinner_text != 'Select An Account':
             user = self.session.query(User).filter(User.username == spinner_text).first()
@@ -260,6 +261,7 @@ class CrypTrackerApp(App):
                 app.username = user.username
                 app.user_id = user.user_id
                 screen.ids.username_selector_message_label = ''
+                screen2.ids.menu_username.text = f'Hello, {user.username}!'
                 self.sm.current = 'MainDashboardScreen'
             else:
                 screen.ids.username_selector_message_label = 'Username not found'
