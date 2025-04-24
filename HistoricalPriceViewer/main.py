@@ -14,7 +14,7 @@ from Tokenstaller.cryptos import CryptoDatabase, Crypto, CryptoPrice
 from kivy_garden.matplotlib.backend_kivyagg import FigureCanvasKivyAgg
 from pycoingecko import CoinGeckoAPI
 
-coin_gecko_api = CoinGeckoAPI()
+
 
 class Text(Label):
     pass

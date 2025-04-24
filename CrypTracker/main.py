@@ -33,10 +33,11 @@ plt.set_loglevel (level = 'warning')
 
 # Your Modules
 from Tokenstaller.cryptos import Crypto, PortfolioEntry, CryptoPrice, ValueCheck, User, CryptoDatabase
-from HistoricalPriceViewer.main import coin_gecko_api
 
 # External API
 from pycoingecko import CoinGeckoAPI
+
+coin_gecko_api = CoinGeckoAPI()
 
 def text_color_from_value(label, lower, upper):
     """
