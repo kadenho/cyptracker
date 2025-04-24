@@ -1,25 +1,9 @@
-import csv
-from xml.etree.ElementTree import fromstring
 
-import pandas as pd
 from kivy.modules import inspector
 from kivy.core.window import Window
-import sys
-from datetime import datetime
-import sqlalchemy
 from kivy.app import App
-import matplotlib.pyplot as plt
-import mplfinance as mpf
-from kivy.properties import StringProperty, ListProperty
-from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.button import Button
-from kivy.uix.label import Label
 from kivy.uix.screenmanager import ScreenManager, Screen
-from kivy_garden.matplotlib import FigureCanvasKivyAgg
-from matplotlib.dates import AutoDateLocator, ConciseDateFormatter
-from sqlalchemy.sql.functions import current_date
 from Tokenstaller.cryptos import Crypto, PortfolioEntry, CryptoPrice, ValueCheck, User, CryptoDatabase
-from pycoingecko import CoinGeckoAPI
 
 #Main App Screens
 class MySQLPasswordScreen(Screen):
@@ -38,6 +22,7 @@ class AboutHelpScreen(Screen):
 class CrypTrackerApp(App):
     def build(self):
         inspector.create_inspector(Window, self)
+        self.update_usernames()
         self.sm = ScreenManager()
         self.sm.add_widget(MySQLPasswordScreen(name='MySQLPasswordScreen'))
         self.sm.add_widget(UserLoginScreen(name='UserLoginScreen'))
@@ -78,12 +63,21 @@ class CrypTrackerApp(App):
                 self.session.add(new_user)
                 self.session.commit()
                 screen.ids.username_message_label = ''
+                self.update_usernames()
                 self.sm.current = 'UserLoginScreen'
             except Exception as e:
                 print('Error with adding user to MySQL', e)
         else:
-            screen.ids.username_message_label = 'Please enter a valid username.'
-
+            screen.ids.username_message_label.text = 'Please enter a valid username.'
+    def update_usernames(self):
+        try:
+            users = self.session.query(User).all()
+            usernames = [user.username for user in users]
+            self.usernames = usernames
+            screen = self.sm.get_screen('UserLoginScreen')
+            screen.ids.username_selector_spinner.values = usernames
+        except Exception as e:
+            print('Error with updating usernames', e)
 
 
 if __name__ == '__main__':

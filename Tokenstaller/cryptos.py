@@ -1,5 +1,6 @@
 import sqlalchemy
-from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, DateTime, DateTime, Index
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, DateTime, DateTime, Index, \
+    ForeignKeyConstraint
 from sqlalchemy.orm import sessionmaker, relationship
 
 Persisted = sqlalchemy.orm.declarative_base()
@@ -15,23 +16,30 @@ class Crypto(Persisted):
 
 class PortfolioEntry(Persisted):
     __tablename__ = 'portfolio_entries'
+
     entry_id = Column(Integer, primary_key=True, autoincrement=True)
-    timestamp = Column(DateTime, ForeignKey('crypto_prices.timestamp', ondelete='CASCADE'), nullable=False)
-    crypto_id = Column(String(64), ForeignKey('crypto_prices.crypto_id', ondelete='CASCADE'), nullable=False)
+    timestamp = Column(DateTime, nullable=False)
+    crypto_id = Column(String(64), nullable=False)
     user_id = Column(Integer, ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False)
     quantity = Column(Integer, nullable=False)
     investment = Column(Integer, nullable=False)
-    user = relationship('User',
-                        back_populates='portfolio_entries',
-                        foreign_keys='[PortfolioEntry.user_id]')
+
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ['crypto_id', 'timestamp'],
+            ['crypto_prices.crypto_id', 'crypto_prices.timestamp'],
+            ondelete='CASCADE'
+        ),
+    )
+
+    user = relationship('User', back_populates='portfolio_entries')
+
     crypto_price = relationship(
         'CryptoPrice',
         back_populates='entries',
-        foreign_keys='[PortfolioEntry.timestamp, PortfolioEntry.crypto_id]',
-        primaryjoin=
-        'and_(PortfolioEntry.timestamp==CryptoPrice.timestamp, ' 'PortfolioEntry.crypto_id==CryptoPrice.crypto_id)'
+        primaryjoin='and_(PortfolioEntry.timestamp==CryptoPrice.timestamp, '
+                    'PortfolioEntry.crypto_id==CryptoPrice.crypto_id)'
     )
-
 
 class CryptoPrice(Persisted):
     __tablename__ = 'crypto_prices'
