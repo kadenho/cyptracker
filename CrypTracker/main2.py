@@ -1,4 +1,3 @@
-
 from kivy.modules import inspector
 from kivy.core.window import Window
 from kivy.app import App
@@ -22,7 +21,6 @@ class AboutHelpScreen(Screen):
 class CrypTrackerApp(App):
     def build(self):
         inspector.create_inspector(Window, self)
-        self.update_usernames()
         self.sm = ScreenManager()
         self.sm.add_widget(MySQLPasswordScreen(name='MySQLPasswordScreen'))
         self.sm.add_widget(UserLoginScreen(name='UserLoginScreen'))
@@ -49,7 +47,7 @@ class CrypTrackerApp(App):
             url = CryptoDatabase.construct_mysql_url('localhost', 3306, 'cryptos', 'root', password)
             self.crypto_database = CryptoDatabase(url)
             self.session = self.crypto_database.create_session()
-
+            self.update_usernames()
             self.sm.current = 'UserLoginScreen'
         except Exception as e:
             print('Error connecting to MySQL:', e)
