@@ -27,6 +27,7 @@ from kivy_garden.matplotlib import FigureCanvasKivyAgg
 
 # Matplotlib
 from matplotlib import pyplot as plt
+import mplfinance as mpf
     # Disables flooding the console with debug messages on graph render
 plt.set_loglevel (level = 'warning')
 
