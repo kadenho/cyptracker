@@ -124,6 +124,7 @@ class CrypTrackerApp(App):
         except sqlalchemy.exc.DatabaseError:
             print("\nError: Database not found. Ensure authority is set to \'localhost\' on line 80. Exiting program.")
             sys.exit(1)
+        list_box.searched_cryptos_list = sorted(list_box.searched_cryptos_list, key=lambda x: x[0])
         screen = self.root.get_screen('SelectCryptoScreen')
         screen.ids.cryptos_list_boxlayout.clear_widgets()  # clear the old list
         screen.ids.select_crypto_text_input.text = ''
