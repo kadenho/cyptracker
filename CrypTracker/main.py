@@ -684,24 +684,26 @@ class CrypTrackerApp(App):
         number_of_value_checks = value_checks.count()
         # Boolean decides if percent_change should also compare against the previous value check or only initial investment
         is_first_value_check = number_of_value_checks == 0
-        previous_value_check = self.session.query(ValueCheck)[
+        previous_value_check = value_checks[
             number_of_value_checks - 1] if not is_first_value_check else None
         total_value = 0
         total_initial_investment = 0
+        change_from_previous = None
         crypto_quantities = self.get_quantities_and_investments()
+
         for crypto_id in crypto_quantities:
             total_initial_investment += crypto_quantities[crypto_id][1]
             total_value += crypto_quantities[crypto_id][2]
 
-        change_from_previous = None
-
         if not is_first_value_check:
             previous_value = previous_value_check.total_value
-            change_from_previous = 100 * (total_value - previous_value) // abs(
-                previous_value) if previous_value != 0 else 0
+            print('The previous value is', previous_value)
+            change_from_previous = 100 * (total_value - previous_value) // abs(previous_value) \
+                if previous_value != 0 else None
 
-        change_from_investment = 100 * (total_value - total_initial_investment) // abs(
-            total_initial_investment) if total_initial_investment != 0 else 0
+        change_from_investment = 100 * (total_value - total_initial_investment) // abs(total_initial_investment) \
+            if total_initial_investment != 0 else 0
+
         value_check = ValueCheck(timestamp=timestamp, total_value=total_value,
                                  change_from_previous=change_from_previous,
                                  user_id=self.user_id, change_from_investment=change_from_investment)
@@ -723,9 +725,17 @@ class CrypTrackerApp(App):
         self.portfolio_report_date = str(timestamp.date())
         print(total_value)
         self.portfolio_report_total = total_value
-        self.portfolio_report_previous_date = str(
-            previous_value_check.timestamp.date()) if previous_value_check is not None else 'N/A'
-        self.portfolio_report_change_from_previous = 0 if is_first_value_check else round(change_from_previous)
+
+        if previous_value_check is not None:
+            self.portfolio_report_previous_date = str(previous_value_check.timestamp.date())
+        else:
+            self.portfolio_report_previous_date = 'N/A'
+
+        if change_from_previous is not None:
+            self.portfolio_report_change_from_previous = round(change_from_previous, 2)
+        else:
+            self.portfolio_report_change_from_previous = 'N/A'
+
         self.portfolio_report_change_from_investment = change_from_investment
         self.display_pie_chart(crypto_quantities)
 
