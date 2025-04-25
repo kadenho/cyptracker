@@ -764,26 +764,9 @@ class CrypTrackerApp(App):
         screen = self.root.get_screen('SelectCryptoScreen')  # gets the screen
         list_box = screen.ids.cryptos_list_boxlayout  # gets the box that holds the rows
         list_box.searched_cryptos_list = []
-        url = "https://api.coingecko.com/api/v3/coins/markets"
-        params = {
-            "vs_currency": "usd",
-            "order": "market_cap_desc",
-            "per_page": 100,
-            "page": 1,
-            "sparkline": False
-        }
-        response = requests.get(url, params=params)
-        coins = response.json()
-        try:
-            for coin in coins:
-                list_box.searched_cryptos_list.append(self.assemble_tuple(coin))
-        except sqlalchemy.exc.ProgrammingError:
-            print(
-                "\nError: Database not found. Create database and run installer or update database on line 80. Exiting program.")
-            sys.exit(1)
-        except sqlalchemy.exc.DatabaseError:
-            print("\nError: Database not found. Ensure authority is set to \'localhost\' on line 80. Exiting program.")
-            sys.exit(1)
+        coins = self.pull_api_coins()
+        for coin in coins:
+            list_box.searched_cryptos_list.append(self.assemble_tuple(coin))
         list_box.searched_cryptos_list = sorted(list_box.searched_cryptos_list, key=lambda x: x[0])
         screen = self.root.get_screen('SelectCryptoScreen')
         screen.ids.cryptos_list_boxlayout.clear_widgets()  # clear the old list
@@ -819,6 +802,12 @@ class CrypTrackerApp(App):
         if search_query == '':
             self.populate_list()  # populate the list with default values
         else:
+            coins = self.pull_api_coins()
+            for coin in coins:
+                if search_query in coin['symbol'].lower() or search_query in coin['name'].lower():
+                    list_box.searched_cryptos_list.append(self.assemble_tuple(coin))
+
+            '''
             for i in range(self.session.query(Crypto).count()):
                 current_id = self.session.query(Crypto)[i].crypto_id
                 crypto = self.session.query(Crypto).filter(Crypto.crypto_id == current_id).one()  # retrieve crypto
@@ -826,8 +815,22 @@ class CrypTrackerApp(App):
                 if search_query in crypto.symbol.lower().strip() or search_query in crypto.name.lower().strip():  # check if crypto matches the search query
                     list_box.searched_cryptos_list.append(
                         self.assemble_tuple(crypto, current_id))  # add crypto to list if it does
+            '''
             screen.ids.cryptos_list_boxlayout.clear_widgets()  # remove old rows
             self.display_cryptos(list_box, screen)
+
+    def pull_api_coins(self):
+        url = "https://api.coingecko.com/api/v3/coins/markets"
+        params = {
+            "vs_currency": "usd",
+            "order": "market_cap_desc",
+            "per_page": 100,
+            "page": 1,
+            "sparkline": False
+        }
+        response = requests.get(url, params=params)
+        coins = response.json()
+        return coins
 
     def assemble_tuple(self, coin):
         """
@@ -856,7 +859,7 @@ class CrypTrackerApp(App):
                                   crypto_percent_change=percent_change, crypto_id=crypto_id))  # display values
         elif len(list_box.searched_cryptos_list) == 0:  # if no cryptos match the search query
             screen.ids.cryptos_list_boxlayout.add_widget(  # notify user no results were found
-                Text(text='No results found', font_size=50))
+                Text(text='No results found', font_size=25))
 
     def move_list_back(self):
         """
@@ -913,15 +916,8 @@ class CrypTrackerApp(App):
         """
         set the values for the show history screen
         """
-        try:
-            selected_crypto = self.session.query(Crypto).filter(
+        selected_crypto = self.session.query(Crypto).filter(
                 Crypto.crypto_id == crypto_id).one()  # get the crypto selected
-        except sqlalchemy.exc.MultipleResultsFound:
-            print("\nError: Multiple results found. Ensure the installer was only ran once.")
-            sys.exit(1)
-        except sqlalchemy.exc.NoResultFound:
-            print("\nError: No results found. Ensure the symbol is correct.")
-            sys.exit(1)
         screen = self.root.get_screen('ViewHistoryScreen')
         screen.crypto_id = crypto_id
         screen.crypto_name = selected_crypto.name
