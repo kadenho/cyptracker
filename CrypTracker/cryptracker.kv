@@ -7,6 +7,7 @@ ScreenManager:
     MainDashboardScreen:
     AboutHelpScreen:
     MySQLPasswordScreen:
+    PriceTrendsScreen:
 
 #Main app GUI
 <MySQLPasswordScreen>
@@ -19,6 +20,7 @@ ScreenManager:
             size: self.size
     BoxLayout:
         orientation: 'vertical'
+        Widget:
         Text:
             text: 'Enter your password to MySQL'
             font_size: sp(50)
@@ -201,6 +203,18 @@ ScreenManager:
             Widget:
                 size_hint: (.25, 1)
         Widget:
+        BoxLayout:
+            orientation: 'horizontal'
+            Widget:
+                size_hint: (.25, 1)
+            Button:
+                id: price_trends_button
+                text: 'Price Trends'
+                font_size: sp(30)
+                on_press: app.on_price_trends_button_press()
+            Widget:
+                size_hint: (.25, 1)
+        Widget:
         Widget:
         BoxLayout:
             orientation: 'horizontal'
@@ -258,9 +272,34 @@ ScreenManager:
             Widget:
                 size_hint: (.25, 1)
         Widget:
-
+<PriceTrendsScreen>
+    name: 'PriceTrendsScreen'
+    canvas.before:
+        Color:
+            rgba: (0,0,0,1)
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    BoxLayout:
+        orientation: 'vertical'
+        Label:
+            text: 'Price Trends'
+            font_size: sp(50)
+            color: (1,1,1,1)
+        Widget:
+        BoxLayout:
+            orientation: 'horizontal'
+            Widget:
+                size_hint: (.25, 1)
+            Button:
+                id: price_trends_back_button
+                text: 'Back'
+                font_size: sp(30)
+                on_press: app.on_price_trends_back_button_press()
+            Widget:
+                size_hint: (.25, 1)
+        Widget:
 <PortfolioMenuScreen>
-
     Label:
         text: app.title_text
         color: (0, 0, 0, 1)
