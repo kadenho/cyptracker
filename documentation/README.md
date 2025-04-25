@@ -28,6 +28,8 @@ CrypTracker is a cryptocurrency tracking app. With it, you can watch, track, and
    2. Go to https://www.coingecko.com/en/developers/dashboard and "Add New Key"
    3. Copy the API Key (should be a string of 27 random characters)
    4. Create a blank python file 'apikey.py' in the CrypTracker directory and type "COINGECKO_API_KEY = '{your api key}'"
+      * Note: if forking project in a VCS, NEVER add your apikey file to the VCS to make sure nobody else can use it
+      * For git users. add 'CrypTracker\apikey.py' to .gitignore or tell your IDE not to commit it.
    5. The program should now use your api key when making calls
 5. Run CrypTracker/main.py in your terminal, or click "Run" in your IDE
 
