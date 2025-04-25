@@ -79,7 +79,8 @@ def text_color_from_value(text, lower, upper):
 # Main App Screens
 class MySQLPasswordScreen(Screen):
     pass
-
+class PriceTrendsScreen(Screen):
+    pass
 
 class UserLoginScreen(Screen):
     pass
@@ -321,7 +322,10 @@ class CrypTrackerApp(App):
 
     def on_portfolio_button_press(self):
         self.sm.current = 'Portfolio Menu'
-
+    def on_price_trends_button_press(self):
+        self.sm.current = 'PriceTrendsScreen'
+    def on_price_trends_back_button_press(self):
+        self.sm.current = 'MainDashboardScreen'
     def on_enter_password_button_press(self):
         screen = self.sm.get_screen('MySQLPasswordScreen')
         try:
@@ -342,6 +346,7 @@ class CrypTrackerApp(App):
             self.sm.add_widget(PieChartScreen(name='Pie Chart'))
             self.sm.add_widget(SelectCryptoScreen(name='SelectCryptoScreen'))
             self.sm.add_widget(ViewHistoryScreen(name='ViewHistoryScreen'))
+            self.sm.add_widget(PriceTrendsScreen(name='PriceTrendsScreen'))
             self.sm.current = 'UserLoginScreen'
         except Exception as e:
             print('Error connecting to MySQL:', e)
