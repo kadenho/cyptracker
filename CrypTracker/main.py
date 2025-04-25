@@ -28,8 +28,9 @@ from kivy_garden.matplotlib import FigureCanvasKivyAgg
 # Matplotlib
 from matplotlib import pyplot as plt
 import mplfinance as mpf
-    # Disables flooding the console with debug messages on graph render
-plt.set_loglevel (level = 'warning')
+
+# Disables flooding the console with debug messages on graph render
+plt.set_loglevel(level='warning')
 
 # Your Modules
 from Tokenstaller.cryptos import Crypto, PortfolioEntry, CryptoPrice, ValueCheck, User, CryptoDatabase
@@ -37,92 +38,101 @@ from Tokenstaller.cryptos import Crypto, PortfolioEntry, CryptoPrice, ValueCheck
 # External API
 from pycoingecko import CoinGeckoAPI
 from apikey import COINGECKO_API_KEY
+
 coin_gecko_api = CoinGeckoAPI(demo_api_key=COINGECKO_API_KEY)
 
-def text_color_from_value(label, lower, upper):
+
+def text_color_from_value(text, lower, upper):
     """
     Yields an RGBA list for color based on the value of a string (red for negative, green for positive, black for 0)
-    Currently, colors are based on
-    :param label: Label whose text and color will be changed
+    :param text: Text of the label whose color is to be change
     :param lower: The highest value to return pure red [1, 0, 0, 1]
     :param upper: The lowest value to return pure green [0, 1, 0, 1]
     :return: RGBA list of colors between 0 and 1
-    >>> colored_text = Label(text='100',color=[0, 0, 0, 1])
-    >>> test_app = CrypTrackerApp()
-    >>> text_color_from_value(colored_text, -100, 100)
-    [0.0, 1.0, 0.0, 1.0]
-    >>> color = [0.5, 0.0, 0.5, 1]
-    >>> colored_text = Label(text='50',color=color)
-    >>> test_app = CrypTrackerApp()
-    >>> text_color_from_value(colored_text, -100, 100)
-    [0.25, 0.5, 0.25, 1.0]
-    >>> color = [1.0, 1.0, 0.0, 1]
-    >>> colored_text = Label(text='-25',color=color)
-    >>> test_app = CrypTrackerApp()
-    >>> text_color_from_value(colored_text, -100, 100)
+    >>> text_color_from_value('-50',-100,100)
+    [0.0, 0.5, 0.0, 1.0]
+    >>> text_color_from_value('-25',-100,100)
     [1.0, 0.75, 0.0, 1.0]
-    >>> color = [1.0, 1.0, 1.0, 1]
-    >>> colored_text = Label(text='0.00',color=color)
-    >>> test_app = CrypTrackerApp()
-    >>> text_color_from_value(colored_text, -100, 100)
-    [1, 1, 1, 1]
+    >>> text_color_from_value('-1000',0,100)
+    [1.0, 0.0, 0.0, 1.0]
     """
-    # Have to copy text_color so that it is not carried over through the default parameter
-    text_color = list(label.color)
+    default_text_color = [0, 0, 0, 1]
     green = [0, 1, 0, 1]
     red = [1, 0, 0, 1]
-    green_differentials = [green[i] - text_color[i] for i in range(4)]
+    green_differentials = [green[i] - default_text_color[i] for i in range(4)]
     # 0, 1, 0
-    red_differentials = [red[i] - text_color[i] for i in range(4)]
+    red_differentials = [red[i] - default_text_color[i] for i in range(4)]
     # Remove non-integers and store as an int
-    value = int(re.sub('[^0-9-]', '', label.text))
+    value = int(re.sub('[^0-9-]', '', text))
     if value > 0:
         value = min(value, upper)
         for i in range(4):
-            text_color[i] += (value / upper) * green_differentials[i]
+            default_text_color[i] += (value / upper) * green_differentials[i]
     if value < 0:
         value = max(value, lower)
         for i in range(4):
-            text_color[i] += (value / lower) * red_differentials[i]
-    return text_color
+            default_text_color[i] += (value / lower) * red_differentials[i]
+    return default_text_color
 
-#Main App Screens
+
+# Main App Screens
 class MySQLPasswordScreen(Screen):
-    def reset_page(self):
-        pass
+    pass
+
+
 class UserLoginScreen(Screen):
-    def reset_page(self):
-        pass
+    pass
+
+
 class CreateProfileScreen(Screen):
-    def reset_page(self):
-        pass
+    pass
+
+
 class MainDashboardScreen(Screen):
-    def reset_page(self):
-        pass
+    pass
+
+
 class AboutHelpScreen(Screen):
+    pass
+
+
+# Portfolio App Screen Classes
+
+class AddDeleteScreen(Screen):
     def reset_page(self):
         pass
 
-#Portfolio App Screen Classes
+    def update_page(self):
+        pass
+
+
 def popup_update_text_size(instance):
+    # Method to make popups adjust their text size to the size of the popup window
     instance.children[0].children[0].children[0].text_size = instance.children[0].children[0].children[0].size
     return
+
+
 class PortfolioMenuScreen(Screen):
-    def reset_page(self):
-        pass
+    pass
+
+
 class ManageCryptocurrenciesScreen(Screen):
-    def reset_page(self):
-        pass
-class AddCryptocurrencyScreen(Screen):
+    pass
+
+
+class AddCryptocurrencyScreen(AddDeleteScreen):
     def reset_page(self):
         self.ids.crypto_name.text = ''
         self.ids.crypto_symbol.text = ''
-class DeleteCryptocurrencyScreen(Screen):
+
+
+class DeleteCryptocurrencyScreen(AddDeleteScreen):
     def reset_page(self):
         self.ids.spinner_delete_crypto.text = 'Crypto ID' if len(
             self.ids.spinner_delete_crypto.text) > 0 else 'No Cryptos'
         self.ids.delete_crypto_name.text = ''
         self.ids.delete_crypto_symbol.text = ''
+
     def update_page(self):
         spinner_text = self.ids.spinner_delete_crypto.text
         if spinner_text == 'Crypto ID' or spinner_text == 'No Cryptos':
@@ -130,17 +140,22 @@ class DeleteCryptocurrencyScreen(Screen):
         crypto = app.session.query(Crypto).filter(Crypto.crypto_id == spinner_text).first()
         self.ids.delete_crypto_name.text = crypto.name
         self.ids.delete_crypto_symbol.text = crypto.symbol
+
+
 class ManagePortfolioEntriesScreen(Screen):
-    def reset_page(self):
-        pass
-class AddPortfolioEntryScreen(Screen):
+    pass
+
+
+class AddPortfolioEntryScreen(AddDeleteScreen):
     def reset_page(self):
         self.ids.spinner_crypto_id.text = 'Crypto ID'
         self.ids.date_text.hint_text = 'YYYY-MM-DD'
         self.ids.date_text.text = ''
         self.ids.quantity_text.hint_text = '1'
         self.ids.quantity_text.text = ''
-class UpdatePortfolioEntryScreen(Screen):
+
+
+class UpdatePortfolioEntryScreen(AddDeleteScreen):
     def reset_page(self):
         self.ids.spinner_update_portfolio.text = 'Entry ID' if len(app.portfolio_info) != 0 else 'No Entries'
         self.ids.update_spinner_crypto_id.text = 'Crypto ID'
@@ -148,6 +163,7 @@ class UpdatePortfolioEntryScreen(Screen):
         self.ids.update_date_text.text = ''
         self.ids.update_quantity_text.hint_text = '1'
         self.ids.update_quantity_text.text = ''
+
     def update_page(self):
         # Retrieve the entry with the same id as the user selects from the spinner
         spinner_text = self.ids.spinner_update_portfolio.text
@@ -160,12 +176,15 @@ class UpdatePortfolioEntryScreen(Screen):
         self.ids.update_date_text.text = str(entry.timestamp.date())
         self.ids.update_quantity_text.hint_text = '1'
         self.ids.update_quantity_text.text = str(entry.quantity)
-class DeletePortfolioEntryScreen(Screen):
+
+
+class DeletePortfolioEntryScreen(AddDeleteScreen):
     def reset_page(self):
         self.ids.spinner_delete_portfolio.text = 'Entry ID' if len(app.portfolio_info) != 0 else 'No Entries'
         self.ids.delete_crypto_id.text = 'Crypto ID'
         self.ids.delete_date_text.text = 'YYYY-MM-DD'
         self.ids.delete_quantity_text.text = '0'
+
     def update_page(self):
         # Retrieve the entry with the same id as the user selects from the spinner
         spinner_text = self.ids.spinner_delete_portfolio.text
@@ -176,18 +195,23 @@ class DeletePortfolioEntryScreen(Screen):
         self.ids.delete_crypto_id.text = entry.crypto_id
         self.ids.delete_date_text.text = str(entry.timestamp.date())
         self.ids.delete_quantity_text.text = str(entry.quantity)
+
+
 class CheckPortfolioScreen(Screen):
-    def reset_page(self):
-        pass
+    pass
 
     def on_enter(self):
         app.add_value_check()
+
+
 class PieChartScreen(Screen):
-    def reset_page(self):
-        pass
+    pass
+
+
 class SelectCryptoScreen(Screen):
-    def reset_page(self):
-        pass
+    pass
+
+
 class ViewHistoryScreen(Screen):
     crypto_id = StringProperty()
     crypto_name = StringProperty()
@@ -195,16 +219,26 @@ class ViewHistoryScreen(Screen):
     crypto_percent_change = StringProperty()
     graph_type = StringProperty('line')
     graph_range = StringProperty('90_day')
-    def reset_page(self):
-        pass
+
+    pass
+
+
 class Text(Label):
     pass
+
+
 class FormattedButton(Button):
     pass
+
+
 class BackButton(FormattedButton):
     pass
+
+
 class ScreenBoxLayout(BoxLayout):
     pass
+
+
 class SelectCryptoBox(BoxLayout):
     crypto_symbol = StringProperty()
     crypto_name = StringProperty()
@@ -212,6 +246,7 @@ class SelectCryptoBox(BoxLayout):
     crypto_percent_change = StringProperty()
     searched_cryptos_list = ListProperty()
     crypto_id = StringProperty()
+
 
 def find_most_recent_timestamp(values_list):
     """
@@ -223,11 +258,12 @@ def find_most_recent_timestamp(values_list):
             most_recent_value = value  # set it as the most recent value
     return most_recent_value  # return most recent value
 
-#Main App Class
+
+# Main App Class
 class CrypTrackerApp(App):
-    #Main app properties
+    # Main app properties
     username = StringProperty()
-    #Portfolio app properties
+    # Portfolio app properties
     title_text = StringProperty('Portfolio App')
     user_id = NumericProperty(1)
     background_color = ColorProperty([0.0, 0.0, 0.0, 1.0])
@@ -247,9 +283,11 @@ class CrypTrackerApp(App):
         self.sm.add_widget(AboutHelpScreen(name='AboutHelpScreen'))
 
         return self.sm
+
     def on_historical_price_button_press(self):
         self.sm.current = 'SelectCryptoScreen'
-    #Main app buttons
+
+    # Main app buttons
     def on_login_button_press(self):
         screen = self.sm.get_screen('UserLoginScreen')
         screen2 = self.sm.get_screen('MainDashboardScreen')
@@ -267,16 +305,22 @@ class CrypTrackerApp(App):
                 screen.ids.username_selector_message_label = 'Username not found'
         else:
             screen.ids.username_selector_message_label.text = 'Select an Account'
+
     def on_create_username_page_button_press(self):
         self.sm.current = 'CreateProfileScreen'
+
     def on_switch_user_button_press(self):
         self.sm.current = 'UserLoginScreen'
+
     def on_about_help_button_press(self):
         self.sm.current = 'AboutHelpScreen'
+
     def on_about_help_back_button_press(self):
         self.sm.current = 'MainDashboardScreen'
+
     def on_portfolio_button_press(self):
         self.sm.current = 'Portfolio Menu'
+
     def on_enter_password_button_press(self):
         screen = self.sm.get_screen('MySQLPasswordScreen')
         try:
@@ -300,6 +344,7 @@ class CrypTrackerApp(App):
             self.sm.current = 'UserLoginScreen'
         except Exception as e:
             print('Error connecting to MySQL:', e)
+
     def on_create_username_button_press(self):
         screen = self.sm.get_screen('CreateProfileScreen')
         username = screen.ids.new_username_text_input.text
@@ -319,6 +364,7 @@ class CrypTrackerApp(App):
             self.sm.current = 'UserLoginScreen'
         except Exception as e:
             print('Error with adding user to MySQL', e)
+
     def update_usernames(self):
         try:
             users = self.session.query(User).all()
@@ -329,8 +375,7 @@ class CrypTrackerApp(App):
         except Exception as e:
             print('Error with updating usernames', e)
 
-
-    #Portfolio methods
+    # Portfolio methods
     def change_screen(self, screen):
         if screen != '':
             self.root.current = screen
@@ -633,7 +678,8 @@ class CrypTrackerApp(App):
         number_of_value_checks = value_checks.count()
         # Boolean decides if percent_change should also compare against the previous value check or only initial investment
         is_first_value_check = number_of_value_checks == 0
-        previous_value_check = self.session.query(ValueCheck)[number_of_value_checks - 1] if not is_first_value_check else None
+        previous_value_check = self.session.query(ValueCheck)[
+            number_of_value_checks - 1] if not is_first_value_check else None
         total_value = 0
         total_initial_investment = 0
         crypto_quantities = self.get_quantities_and_investments()
@@ -725,7 +771,8 @@ class CrypTrackerApp(App):
                 list_box.searched_cryptos_list.append(
                     self.assemble_tuple(crypto, current_id))  # append values to a list with a tuple
         except sqlalchemy.exc.ProgrammingError:
-            print("\nError: Database not found. Create database and run installer or update database on line 80. Exiting program.")
+            print(
+                "\nError: Database not found. Create database and run installer or update database on line 80. Exiting program.")
             sys.exit(1)
         except sqlalchemy.exc.DatabaseError:
             print("\nError: Database not found. Ensure authority is set to \'localhost\' on line 80. Exiting program.")
@@ -742,13 +789,13 @@ class CrypTrackerApp(App):
                 (symbol, name, value, percent_change, crypto_id) = list_box.searched_cryptos_list[i]  # retrieve values
                 screen.ids.cryptos_list_boxlayout.add_widget(
                     SelectCryptoBox(crypto_symbol=symbol, crypto_name=name, crypto_value=value,
-                                  crypto_percent_change=percent_change, crypto_id=crypto_id))  # display values
+                                    crypto_percent_change=percent_change, crypto_id=crypto_id))  # display values
         elif 0 < len(list_box.searched_cryptos_list) <= 4:
             for i in range(len(list_box.searched_cryptos_list)):
                 (symbol, name, value, percent_change, crypto_id) = list_box.searched_cryptos_list[i]  # retrieve values
                 screen.ids.cryptos_list_boxlayout.add_widget(
                     SelectCryptoBox(crypto_symbol=symbol, crypto_name=name, crypto_value=value,
-                                  crypto_percent_change=percent_change, crypto_id=crypto_id))  # display values
+                                    crypto_percent_change=percent_change, crypto_id=crypto_id))  # display values
         elif len(list_box.searched_cryptos_list) == 0:  # if no cryptos match the search query
             screen.ids.cryptos_list_boxlayout.add_widget(  # notify user no results were found
                 Text(text='No results found', font_size=50))
@@ -781,9 +828,10 @@ class CrypTrackerApp(App):
         """
         crypto_symbol = crypto.symbol  # retrieve crypto's symbol
         crypto_name = crypto.name  # retrieve crypto's name
-        today_values = self.session.query(CryptoPrice).filter(CryptoPrice.crypto_id == current_id, # retrieve all of today's timestamps
-                                                            CryptoPrice.timestamp >= datetime(2025, 1,
-                                                                                            30)).all()  # timestamp is hard coded for dummy data, once we use the api it will be changed
+        today_values = self.session.query(CryptoPrice).filter(CryptoPrice.crypto_id == current_id,
+                                                              # retrieve all of today's timestamps
+                                                              CryptoPrice.timestamp >= datetime(2025, 1,
+                                                                                                30)).all()  # timestamp is hard coded for dummy data, once we use the api it will be changed
         if not today_values:  # ensure there is a price for today
             today_price = percent_change = None
         else:
@@ -792,10 +840,10 @@ class CrypTrackerApp(App):
             today_price = str(round(most_recent_value.price * 0.01, 2))
 
             yesterday_values = self.session.query(CryptoPrice).filter(CryptoPrice.crypto_id == current_id,
-                                                                    # retrieve all of today's timestamps
-                                                                    CryptoPrice.timestamp >= datetime(2025, 1, 29),
-                                                                    CryptoPrice.timestamp < datetime(2025, 1,
-                                                                                                   30)).all()  # timestamp is hard coded for dummy data, once we use the api it will be changed
+                                                                      # retrieve all of today's timestamps
+                                                                      CryptoPrice.timestamp >= datetime(2025, 1, 29),
+                                                                      CryptoPrice.timestamp < datetime(2025, 1,
+                                                                                                       30)).all()  # timestamp is hard coded for dummy data, once we use the api it will be changed
             if not yesterday_values:  # ensure there is a price for yesterday
                 percent_change = None
             else:
@@ -809,7 +857,8 @@ class CrypTrackerApp(App):
                     percent_change = str(
                         round((float(today_price) - float(yesterday_price)) / float(yesterday_price) * 100,
                               2))  # calculate percent change
-        assembled_tuple = (crypto_symbol, crypto_name, today_price, percent_change, current_id)  # package data into a tuple
+        assembled_tuple = (
+            crypto_symbol, crypto_name, today_price, percent_change, current_id)  # package data into a tuple
         return assembled_tuple  # return the assembled tuple
 
     def move_list_back(self):
@@ -831,7 +880,7 @@ class CrypTrackerApp(App):
                         index - 5 + i]  # retrieve values
                     screen.ids.cryptos_list_boxlayout.add_widget(
                         SelectCryptoBox(crypto_symbol=symbol, crypto_name=name, crypto_value=value,
-                                      crypto_percent_change=percent_change, crypto_id=crypto_id))  # display crypto
+                                        crypto_percent_change=percent_change, crypto_id=crypto_id))  # display crypto
 
     def move_list_forward(self):
         """
@@ -853,7 +902,7 @@ class CrypTrackerApp(App):
                         i + index + 1]  # retrieve values
                     screen.ids.cryptos_list_boxlayout.add_widget(
                         SelectCryptoBox(crypto_symbol=symbol, crypto_name=name, crypto_value=value,
-                                      crypto_percent_change=percent_change, crypto_id=crypto_id))  # display crypto
+                                        crypto_percent_change=percent_change, crypto_id=crypto_id))  # display crypto
             elif index != len(list_box.searched_cryptos_list) - 1:  # if there is at least 1 crypto left
                 screen.ids.cryptos_list_boxlayout.clear_widgets()  # remove all the rows
                 for i in range(len(list_box.searched_cryptos_list) - index - 1):  # for the remaining cryptos
@@ -861,14 +910,15 @@ class CrypTrackerApp(App):
                         i + index + 1]  # retrieve values
                     screen.ids.cryptos_list_boxlayout.add_widget(
                         SelectCryptoBox(crypto_symbol=symbol, crypto_name=name, crypto_value=value,
-                                      crypto_percent_change=percent_change, crypto_id=crypto_id))  # display crypto
+                                        crypto_percent_change=percent_change, crypto_id=crypto_id))  # display crypto
 
     def select_crypto(self, crypto_id):
         """
         set the values for the show history screen
         """
         try:
-            selected_crypto = self.session.query(Crypto).filter(Crypto.crypto_id == crypto_id).one()  # get the crypto selected
+            selected_crypto = self.session.query(Crypto).filter(
+                Crypto.crypto_id == crypto_id).one()  # get the crypto selected
         except sqlalchemy.exc.MultipleResultsFound:
             print("\nError: Multiple results found. Ensure the installer was only ran once.")
             sys.exit(1)
@@ -987,7 +1037,7 @@ class CrypTrackerApp(App):
         Take the timestamps and values and generate a chart for the screen
         """
         max_value = max(values)
-        mean_value = sum(values)/(len(values))
+        mean_value = sum(values) / (len(values))
         minimum_value = min(values)
         screen = self.root.get_screen('ViewHistoryScreen')
         match screen.graph_type:
@@ -1001,14 +1051,18 @@ class CrypTrackerApp(App):
                     ConciseDateFormatter(AutoDateLocator()))  # finds the optimal way to label the dates
                 plt.ylabel('Price')  # label the y-axis
                 plt.grid()
-                plt.axhline(y=max_value, color='#158a41', linestyle='--', linewidth=1) # add line for max value
-                plt.text(timestamps[0], max_value, f'Max: {round(max_value,2)}', fontsize = 12) # add label max value line
-                plt.axhline(y=mean_value, color='cornflowerblue', linestyle='--', linewidth=1)  # add line for mean value
-                plt.text(timestamps[0], mean_value, f'Mean: {round(mean_value, 2)}', fontsize=12)  # add label mean value line
+                plt.axhline(y=max_value, color='#158a41', linestyle='--', linewidth=1)  # add line for max value
+                plt.text(timestamps[0], max_value, f'Max: {round(max_value, 2)}',
+                         fontsize=12)  # add label max value line
+                plt.axhline(y=mean_value, color='cornflowerblue', linestyle='--',
+                            linewidth=1)  # add line for mean value
+                plt.text(timestamps[0], mean_value, f'Mean: {round(mean_value, 2)}',
+                         fontsize=12)  # add label mean value line
                 plt.axhline(y=minimum_value, color='#b81121', linestyle='--', linewidth=1)  # add line for minimum value
-                plt.text(timestamps[0], minimum_value, f'Min: {round(minimum_value, 2)}', fontsize=12)  # add label minimum value line
+                plt.text(timestamps[0], minimum_value, f'Min: {round(minimum_value, 2)}',
+                         fontsize=12)  # add label minimum value line
                 if values[0] > values[-1]:  # determine if price went down over course of the chart
-                    plt.gca().get_lines()[0].set_color("#b81121") # set color red
+                    plt.gca().get_lines()[0].set_color("#b81121")  # set color red
                 elif values[0] < values[-1]:  # determine if price went up over course of the chart
                     plt.gca().get_lines()[0].set_color("#158a41")  # set color green
                 else:  # price stayed the same over course of the chart
@@ -1025,13 +1079,15 @@ class CrypTrackerApp(App):
                 plt.axhline(y=max_value, color='#158a41', linestyle='--', linewidth=1)  # add line for max value
                 plt.text(-0.3, max_value, f'Max: {round(max_value, 2)}',
                          fontsize=12)  # add label max value line
-                plt.axhline(y=mean_value, color='cornflowerblue', linestyle='--', linewidth=1)  # add line for mean value
+                plt.axhline(y=mean_value, color='cornflowerblue', linestyle='--',
+                            linewidth=1)  # add line for mean value
                 plt.text(.7, mean_value, f'Mean: {round(mean_value, 2)}', fontsize=12)  # add label mean value line
                 plt.axhline(y=minimum_value, color='#b81121', linestyle='--', linewidth=1)  # add line for minimum value
-                plt.text(1.7, minimum_value, f'Min: {round(minimum_value, 2)}', fontsize=12)  # add label minimum value line
+                plt.text(1.7, minimum_value, f'Min: {round(minimum_value, 2)}',
+                         fontsize=12)  # add label minimum value line
                 return plt.gcf()
             case 'candlestick':
-                timestamps_dict = {} # Arrange timestamps and values into a dictionary to be used in candlestick graph
+                timestamps_dict = {}  # Arrange timestamps and values into a dictionary to be used in candlestick graph
                 for i in range(len(timestamps)):
                     timestamps_dict[timestamps[i]] = values[i]
                 days_list = []
@@ -1044,22 +1100,23 @@ class CrypTrackerApp(App):
                 average_prices = []
                 highest_prices = []
                 lowest_prices = []
-                for day in days_list: # for each day in our list
-                    day_timestamps = [] # holds all the timestamps that occur on that day
+                for day in days_list:  # for each day in our list
+                    day_timestamps = []  # holds all the timestamps that occur on that day
                     for key in timestamps_dict:
-                        if datetime(year=key.year, month=key.month, day=key.day) == day: # check if timestamp occurs on that day
-                            day_timestamps.append(key) # if it does, append it to our list.
-                    day_timestamps.sort() # ensure the timestamps are sorted chronologically
+                        if datetime(year=key.year, month=key.month,
+                                    day=key.day) == day:  # check if timestamp occurs on that day
+                            day_timestamps.append(key)  # if it does, append it to our list.
+                    day_timestamps.sort()  # ensure the timestamps are sorted chronologically
                     day_sum = 0
-                    highest_price = timestamps_dict[day_timestamps[0]] # set the default highest price
-                    lowest_price = timestamps_dict[day_timestamps[0]] # set the default lowest price
-                    for timestamp in day_timestamps: # for each timestamp in my day's timestamp
-                        if timestamps_dict[timestamp] > highest_price: # if we have a new highest price
-                            highest_price = timestamps_dict[timestamp] # update highest price
-                        if timestamps_dict[timestamp] < lowest_price: # if we have a new lowest price
-                            lowest_price = timestamps_dict[timestamp] # update lowest price
-                        day_sum += timestamps_dict[timestamp] # increase the day's sum price
-                    average_prices.append(day_sum / len(day_timestamps)) # get average price
+                    highest_price = timestamps_dict[day_timestamps[0]]  # set the default highest price
+                    lowest_price = timestamps_dict[day_timestamps[0]]  # set the default lowest price
+                    for timestamp in day_timestamps:  # for each timestamp in my day's timestamp
+                        if timestamps_dict[timestamp] > highest_price:  # if we have a new highest price
+                            highest_price = timestamps_dict[timestamp]  # update highest price
+                        if timestamps_dict[timestamp] < lowest_price:  # if we have a new lowest price
+                            lowest_price = timestamps_dict[timestamp]  # update lowest price
+                        day_sum += timestamps_dict[timestamp]  # increase the day's sum price
+                    average_prices.append(day_sum / len(day_timestamps))  # get average price
                     highest_prices.append(highest_price)
                     lowest_prices.append(lowest_price)
                     opening_prices.append(timestamps_dict[day_timestamps[0]])
@@ -1071,15 +1128,17 @@ class CrypTrackerApp(App):
                     'Close': closing_prices
                 }
                 dataframe = pd.DataFrame(data, index=pd.DatetimeIndex(days_list))
-                fig, ax = mpf.plot(dataframe, type='candle', style='charles', title=screen.crypto_name, ylabel='Price', returnfig=True)
+                fig, ax = mpf.plot(dataframe, type='candle', style='charles', title=screen.crypto_name, ylabel='Price',
+                                   returnfig=True)
                 ax[0].yaxis.set_label_position("left")
                 ax[0].yaxis.tick_left()
                 return fig
 
     def export_to_csv(self):
         screen = self.root.get_screen('ViewHistoryScreen')
-        file_name = (f'{screen.crypto_id.replace(" ", "_")}_{screen.graph_range}_report_{str(datetime.now().date()).replace("-", "_")}_{str(datetime.now().hour)}_'
-                     f'{str(datetime.now().minute)}_{str(datetime.now().second)}.csv')
+        file_name = (
+            f'{screen.crypto_id.replace(" ", "_")}_{screen.graph_range}_report_{str(datetime.now().date()).replace("-", "_")}_{str(datetime.now().hour)}_'
+            f'{str(datetime.now().minute)}_{str(datetime.now().second)}.csv')
         max_date = self.get_max_date()
         with open(file_name, 'w', newline='') as file:
             writer = csv.writer(file)
@@ -1087,6 +1146,7 @@ class CrypTrackerApp(App):
             for value in screen.crypto_values:
                 if value[0] >= max_date:
                     writer.writerow(value)
+
 
 class CustomButton(Button):
     """
@@ -1112,6 +1172,6 @@ class CustomButton(Button):
 
 
 if __name__ == '__main__':
-    Window.size = (400, 400*(16/9))
+    Window.size = (400, 400 * (16 / 9))
     app = CrypTrackerApp()
     app.run()
