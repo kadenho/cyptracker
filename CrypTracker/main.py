@@ -1033,6 +1033,7 @@ class CrypTrackerApp(App):
         max_value = max(values)
         mean_value = sum(values) / (len(values))
         minimum_value = min(values)
+        current_value = values[-1]
         screen = self.root.get_screen('ViewHistoryScreen')
         match screen.graph_type:
             case 'line':
@@ -1047,14 +1048,17 @@ class CrypTrackerApp(App):
                 plt.grid()
                 plt.axhline(y=max_value, color='#158a41', linestyle='--', linewidth=1)  # add line for max value
                 plt.text(timestamps[0], max_value, f'Max: {round(max_value, 2)}',
-                         fontsize=12)  # add label max value line
+                         fontsize=10)  # add label max value line
                 plt.axhline(y=mean_value, color='cornflowerblue', linestyle='--',
                             linewidth=1)  # add line for mean value
                 plt.text(timestamps[0], mean_value, f'Mean: {round(mean_value, 2)}',
-                         fontsize=12)  # add label mean value line
+                         fontsize=10)  # add label mean value line
                 plt.axhline(y=minimum_value, color='#b81121', linestyle='--', linewidth=1)  # add line for minimum value
                 plt.text(timestamps[0], minimum_value, f'Min: {round(minimum_value, 2)}',
-                         fontsize=12)  # add label minimum value line
+                         fontsize=10)  # add label minimum value line
+                plt.axhline(y=current_value, color='#b81121', linestyle='--', linewidth=1)  # add line for minimum value
+                plt.text(timestamps[-1], current_value, f'Current: {round(current_value, 2)}',
+                         fontsize=10, horizontalalignment='right')  # add label minimum value line
                 if values[0] > values[-1]:  # determine if price went down over course of the chart
                     plt.gca().get_lines()[0].set_color("#b81121")  # set color red
                 elif values[0] < values[-1]:  # determine if price went up over course of the chart
