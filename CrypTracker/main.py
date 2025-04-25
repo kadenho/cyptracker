@@ -916,18 +916,16 @@ class CrypTrackerApp(App):
         """
         set the values for the show history screen
         """
-        selected_crypto = self.session.query(Crypto).filter(
-                Crypto.crypto_id == crypto_id).one()  # get the crypto selected
+        selected_crypto = coin_gecko_api.get_coin_by_id(crypto_id)
         screen = self.root.get_screen('ViewHistoryScreen')
-        screen.crypto_id = crypto_id
-        screen.crypto_name = selected_crypto.name
-
-        selected_values = self.session.query(CryptoPrice).filter(
-            CryptoPrice.crypto_id == selected_crypto.crypto_id).all()  # find all values for that crypto
+        screen.crypto_id = selected_crypto['id']
+        screen.crypto_name = selected_crypto['name']
+        api_values = coin_gecko_api.get_coin_market_chart_by_id(selected_crypto['id'], 'usd', 90)
         screen.crypto_values = []
-        for crypto_value in selected_values:  # reassemble the values as a tuple
-            assembled_tuple = (crypto_value.timestamp, crypto_value.price)
+        for value in api_values['prices']:
+            assembled_tuple = (datetime.fromtimestamp(value[0]/1000), round(value[1]*100,2))
             screen.crypto_values.append(assembled_tuple)
+            print(assembled_tuple)
         self.display_graph()
 
     def display_ninety_day_graph(self):
@@ -1008,18 +1006,16 @@ class CrypTrackerApp(App):
 
     def get_max_date(self):
         screen = self.root.get_screen('ViewHistoryScreen')
+
         match screen.graph_range:
             case '90_day':
-                max_previous_time = datetime(2024, 11, 1, 23, 59, 59)  # timestamp hard coded until api implementation
+                max_previous_time = datetime.now() - timedelta(days=90)
             case '30_day':
-                max_previous_time = datetime(2025, 1, 1, 23, 59,
-                                             59)  # timestamp hard coded until api implementation
+                max_previous_time = datetime.now() - timedelta(days=30)
             case '7_day':
-                max_previous_time = datetime(2025, 1, 22, 23, 59,
-                                             59)  # timestamp hard coded until api implementation
+                max_previous_time = datetime.now() - timedelta(days=7)
             case '1_day':
-                max_previous_time = datetime(2025, 1, 29, 23, 59,
-                                             59)  # timestamp hard coded until api implementation
+                max_previous_time = datetime.now() - timedelta(days=1)
             case _:
                 'Error: invalid graph range. Exiting program.'
                 sys.exit(1)
