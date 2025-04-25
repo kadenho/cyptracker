@@ -16,7 +16,6 @@ from matplotlib import pyplot as plt
 from sqlalchemy import and_, desc
 from sqlalchemy.exc import SQLAlchemyError
 
-from HistoricalPriceViewer.main import coin_gecko_api
 from Tokenstaller.cryptos import CryptoDatabase, Crypto, PortfolioEntry, CryptoPrice
 from Tokenstaller.cryptos import ValueCheck
 from pycoingecko import CoinGeckoAPI
@@ -268,7 +267,7 @@ class PortfolioTrackerApp(App):
         try:
             added_crypto_id = list(filter(lambda dictionary: dictionary["symbol"] == symbol \
                                                              and dictionary["name"] == name,
-                                          coin_gecko_api.get_coins_list()))[0]['id']
+                                          self.coingecko_api.get_coins_list()))[0]['id']
         except IndexError:
             popup_title = 'Crypto not found'
             popup_message = f'Crypto with name {name} and symbol {symbol} not found.'
@@ -373,7 +372,7 @@ class PortfolioTrackerApp(App):
             if self.session.query(CryptoPrice).filter(
                     and_(CryptoPrice.timestamp == entry_date, CryptoPrice.crypto_id == crypto_id)).count() == 0:
                 try:
-                    historic_coin_data = coin_gecko_api.get_coin_history_by_id(crypto_id, adjusted_date)
+                    historic_coin_data = self.coingecko_api.get_coin_history_by_id(crypto_id, adjusted_date)
                     price = historic_coin_data['market_data']['current_price']['usd']
                     self.add_crypto_price(crypto_id, entry_date, price)
                 except SQLAlchemyError:
@@ -509,7 +508,7 @@ class PortfolioTrackerApp(App):
                 and_(CryptoPrice.timestamp == timestamp, CryptoPrice.crypto_id == crypto_id))
             # Add new price to database if none are found at the current time
             if crypto_price.count() == 0:
-                price = 100 * round(coin_gecko_api.get_price(crypto_id, 'usd')[crypto_id]['usd'], 2)
+                price = 100 * round(self.coingecko_api.get_price(crypto_id, 'usd')[crypto_id]['usd'], 2)
                 self.add_crypto_price(crypto_id, timestamp, price)
                 self.session.commit()
             current_price = self.session.query(CryptoPrice).filter(CryptoPrice.crypto_id == crypto_id).order_by(

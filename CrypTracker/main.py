@@ -958,7 +958,7 @@ class CrypTrackerApp(App):
             if value[0] >= max_previous_time:
                 timestamps.append(value[0])  # separate tuples into timestamps
                 values.append(value[1] * 0.01)
-        graph = self.generate_chart(timestamps, values)  # generate the chart
+        graph = self.generate_price_chart(timestamps, values)  # generate the chart
         screen.ids.chart_box.clear_widgets()  # remove olds charts
         screen.ids.chart_box.add_widget(FigureCanvasKivyAgg(graph))  # add new graph
         plt.close(graph)
@@ -982,7 +982,7 @@ class CrypTrackerApp(App):
                 sys.exit(1)
         return max_previous_time
 
-    def generate_chart(self, timestamps, values):
+    def generate_price_chart(self, timestamps, values):
         """
         Take the timestamps and values and generate a chart for the screen
         """
