@@ -5,6 +5,7 @@ import sys
 from datetime import datetime, date, timedelta, time
 
 import pandas as pd
+import requests
 # SQLAlchemy
 import sqlalchemy
 from kivy.uix.boxlayout import BoxLayout
@@ -717,13 +718,19 @@ class CrypTrackerApp(App):
         screen = self.root.get_screen('SelectCryptoScreen')  # gets the screen
         list_box = screen.ids.cryptos_list_boxlayout  # gets the box that holds the rows
         list_box.searched_cryptos_list = []
+        url = "https://api.coingecko.com/api/v3/coins/markets"
+        params = {
+            "vs_currency": "usd",
+            "order": "market_cap_desc",
+            "per_page": 100,
+            "page": 1,
+            "sparkline": False
+        }
+        response = requests.get(url, params=params)
+        coins = response.json()
         try:
-            for i in range(self.session.query(Crypto).count()):
-                current_id = self.session.query(Crypto)[i].crypto_id
-                crypto = self.session.query(Crypto).filter(
-                    Crypto.crypto_id == current_id).one()  # get crypto with that matches the id
-                list_box.searched_cryptos_list.append(
-                    self.assemble_tuple(crypto, current_id))  # append values to a list with a tuple
+            for coin in coins:
+                list_box.searched_cryptos_list.append(self.assemble_tuple(coin))
         except sqlalchemy.exc.ProgrammingError:
             print("\nError: Database not found. Create database and run installer or update database on line 80. Exiting program.")
             sys.exit(1)
@@ -735,23 +742,6 @@ class CrypTrackerApp(App):
         screen.ids.cryptos_list_boxlayout.clear_widgets()  # clear the old list
         screen.ids.select_crypto_text_input.text = ''
         self.display_cryptos(list_box, screen)
-
-    def display_cryptos(self, list_box, screen):
-        if len(list_box.searched_cryptos_list) >= 5:
-            for i in range(5):
-                (symbol, name, value, percent_change, crypto_id) = list_box.searched_cryptos_list[i]  # retrieve values
-                screen.ids.cryptos_list_boxlayout.add_widget(
-                    SelectCryptoBox(crypto_symbol=symbol, crypto_name=name, crypto_value=value,
-                                  crypto_percent_change=percent_change, crypto_id=crypto_id))  # display values
-        elif 0 < len(list_box.searched_cryptos_list) <= 4:
-            for i in range(len(list_box.searched_cryptos_list)):
-                (symbol, name, value, percent_change, crypto_id) = list_box.searched_cryptos_list[i]  # retrieve values
-                screen.ids.cryptos_list_boxlayout.add_widget(
-                    SelectCryptoBox(crypto_symbol=symbol, crypto_name=name, crypto_value=value,
-                                  crypto_percent_change=percent_change, crypto_id=crypto_id))  # display values
-        elif len(list_box.searched_cryptos_list) == 0:  # if no cryptos match the search query
-            screen.ids.cryptos_list_boxlayout.add_widget(  # notify user no results were found
-                Text(text='No results found', font_size=50))
 
     def repopulate_list(self):
         """
@@ -775,42 +765,34 @@ class CrypTrackerApp(App):
             screen.ids.cryptos_list_boxlayout.clear_widgets()  # remove old rows
             self.display_cryptos(list_box, screen)
 
-    def assemble_tuple(self, crypto, current_id):
+    def assemble_tuple(self, coin):
         """
         retrieve data and package into a tuple to be added to the list
         """
-        crypto_symbol = crypto.symbol  # retrieve crypto's symbol
-        crypto_name = crypto.name  # retrieve crypto's name
-        today_values = self.session.query(CryptoPrice).filter(CryptoPrice.crypto_id == current_id, # retrieve all of today's timestamps
-                                                            CryptoPrice.timestamp >= datetime(2025, 1,
-                                                                                            30)).all()  # timestamp is hard coded for dummy data, once we use the api it will be changed
-        if not today_values:  # ensure there is a price for today
-            today_price = percent_change = None
-        else:
-            most_recent_value = find_most_recent_timestamp(today_values)  # get most recent value from today
-
-            today_price = str(round(most_recent_value.price * 0.01, 2))
-
-            yesterday_values = self.session.query(CryptoPrice).filter(CryptoPrice.crypto_id == current_id,
-                                                                    # retrieve all of today's timestamps
-                                                                    CryptoPrice.timestamp >= datetime(2025, 1, 29),
-                                                                    CryptoPrice.timestamp < datetime(2025, 1,
-                                                                                                   30)).all()  # timestamp is hard coded for dummy data, once we use the api it will be changed
-            if not yesterday_values:  # ensure there is a price for yesterday
-                percent_change = None
-            else:
-                most_recent_value = find_most_recent_timestamp(yesterday_values)  # get most recent value from yesterday
-
-                yesterday_price = str(round(most_recent_value.price * 0.01, 2))  # calculate the percent change
-
-                if yesterday_price == '0.0':  # prevent divide by 0 error
-                    percent_change = '-100.00'
-                else:
-                    percent_change = str(
-                        round((float(today_price) - float(yesterday_price)) / float(yesterday_price) * 100,
-                              2))  # calculate percent change
-        assembled_tuple = (crypto_symbol, crypto_name, today_price, percent_change, current_id)  # package data into a tuple
+        crypto_symbol = coin['symbol']  # retrieve crypto's symbol
+        crypto_name = coin['name']  # retrieve crypto's name
+        today_price = str(coin['current_price'])
+        percent_change = str(round(coin['price_change_percentage_24h'],2))
+        crypto_id = coin['id']
+        assembled_tuple = (crypto_symbol, crypto_name, today_price, percent_change, crypto_id)  # package data into a tuple
         return assembled_tuple  # return the assembled tuple
+
+    def display_cryptos(self, list_box, screen):
+        if len(list_box.searched_cryptos_list) >= 5:
+            for i in range(5):
+                (symbol, name, value, percent_change, crypto_id) = list_box.searched_cryptos_list[i]  # retrieve values
+                screen.ids.cryptos_list_boxlayout.add_widget(
+                    SelectCryptoBox(crypto_symbol=symbol, crypto_name=name, crypto_value=value,
+                                  crypto_percent_change=percent_change, crypto_id=crypto_id))  # display values
+        elif 0 < len(list_box.searched_cryptos_list) <= 4:
+            for i in range(len(list_box.searched_cryptos_list)):
+                (symbol, name, value, percent_change, crypto_id) = list_box.searched_cryptos_list[i]  # retrieve values
+                screen.ids.cryptos_list_boxlayout.add_widget(
+                    SelectCryptoBox(crypto_symbol=symbol, crypto_name=name, crypto_value=value,
+                                  crypto_percent_change=percent_change, crypto_id=crypto_id))  # display values
+        elif len(list_box.searched_cryptos_list) == 0:  # if no cryptos match the search query
+            screen.ids.cryptos_list_boxlayout.add_widget(  # notify user no results were found
+                Text(text='No results found', font_size=50))
 
     def move_list_back(self):
         """
