@@ -302,6 +302,14 @@ ScreenManager:
             on_press:
                 root.manager.current = 'Check Portfolio'
 
+        CustomButton:
+            text: 'Return to CrypTracker'
+            text_color: (0.8, 0.8, 0.8, 1)
+            size_hint_x: 0.8
+            pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
+            on_press:
+                root.manager.current = 'MainDashboardScreen'
+
 <ManageCryptoCurrenciesScreen>
     Label:
         text: 'Manage Cryptocurrencies'
@@ -811,7 +819,7 @@ ScreenManager:
             halign: 'center'
             valign: 'middle'
             on_text:
-                self.color = text_color_from_value(self, -100000, 100000)
+                self.color = text_color_from_value(self.text, -100000, 100000)
 
         Label:
             text: 'Date of Last Report'
@@ -837,7 +845,7 @@ ScreenManager:
             halign: 'center'
             valign: 'middle'
             on_text:
-                self.color = text_color_from_value(self, -100, 100)
+                self.color = text_color_from_value(self.text, -100, 100)
 
         Label:
             id: percent_change_from_investment
@@ -849,10 +857,10 @@ ScreenManager:
             halign: 'center'
             valign: 'middle'
             on_text:
-                self.color = text_color_from_value(self, -100, 100)
+                self.color = text_color_from_value(self.text, -100, 100)
 
         CustomButton:
-            text: 'More Details'
+            text: 'View Pie Chart'
             pos_hint: {'x': 0.125}
             size_hint_x: 0.75
             on_press:
@@ -930,6 +938,8 @@ ScreenManager:
         Rectangle:
             pos: self.pos
             size: self.size
+<AddDeleteScreen>
+# Methods to reset the displayed data of screens that require inputting data
     on_enter:
         self.reset_page()
     on_leave:
