@@ -445,14 +445,14 @@ class CrypTrackerApp(App):
         crypto_ids = [crypto_id for crypto_id in crypto_quantities]
         current_holdings = [crypto_quantities[crypto_id][2] for crypto_id in crypto_quantities]
         try:
-            self.generate_chart(crypto_ids, current_holdings)  # generate the chart
+            self.generate_pie_chart(crypto_ids, current_holdings)  # generate the chart
         except ValueError:
             self.display_popup('Value Error',
                                'You currently have $0.00 in holdings, '
                                'so a pie chart cannot be generated.',
                                'Portfolio Menu')
 
-    def generate_chart(self, crypto_ids, holdings):
+    def generate_pie_chart(self, crypto_ids, holdings):
         """
         Take the crypto_ids and current holdings and generate a pie chart for the screen
         """
