@@ -922,7 +922,18 @@ class CrypTrackerApp(App):
         for value in api_values['prices']:
             assembled_tuple = (datetime.fromtimestamp(value[0]/1000), round(value[1]*100,2))
             screen.crypto_values.append(assembled_tuple)
-        self.display_historical_graph()
+        timestamps, values = self.get_timestamp_values()
+        self.display_historical_graph(self.root.get_screen('ViewHistoryScreen').ids.chart_box, timestamps, values)
+    def get_timestamp_values(self):
+        timestamps = []
+        values = []
+        max_previous_time = self.get_max_date()
+        screen = self.root.get_screen('ViewHistoryScreen')
+        for value in screen.crypto_values:
+            if value[0] >= max_previous_time:
+                timestamps.append(value[0])  # separate tuples into timestamps
+                values.append(value[1] * 0.01)
+        return timestamps, values
 
     def display_ninety_day_graph(self):
         """
@@ -931,8 +942,8 @@ class CrypTrackerApp(App):
 
         screen = self.root.get_screen('ViewHistoryScreen')
         screen.graph_range = '90_day'
-        self.display_historical_graph()
-
+        timestamps, values = self.get_timestamp_values()
+        self.display_historical_graph(self.root.get_screen('ViewHistoryScreen').ids.chart_box, timestamps, values)
     def display_thirty_day_graph(self):
         """
         Generate and display the chart for the past 30 days
@@ -940,64 +951,57 @@ class CrypTrackerApp(App):
 
         screen = self.root.get_screen('ViewHistoryScreen')
         screen.graph_range = '30_day'
-        self.display_historical_graph()
-
+        timestamps, values = self.get_timestamp_values()
+        self.display_historical_graph(self.root.get_screen('ViewHistoryScreen').ids.chart_box, timestamps, values)
     def display_seven_day_graph(self):
         """
         Generate and display the chart for the past 7 days
         """
         screen = self.root.get_screen('ViewHistoryScreen')
         screen.graph_range = '7_day'
-        self.display_historical_graph()
-
+        timestamps, values = self.get_timestamp_values()
+        self.display_historical_graph(self.root.get_screen('ViewHistoryScreen').ids.chart_box, timestamps, values)
     def display_one_day_graph(self):
         """
         Generate and display the chart for the day
         """
         screen = self.root.get_screen('ViewHistoryScreen')
         screen.graph_range = '1_day'
-        self.display_historical_graph()
-
+        timestamps, values = self.get_timestamp_values()
+        self.display_historical_graph(self.root.get_screen('ViewHistoryScreen').ids.chart_box, timestamps, values)
     def display_line_graph(self):
         """
         Generate and display a line graph
         """
         screen = self.root.get_screen('ViewHistoryScreen')
         screen.graph_type = 'line'
-        self.display_historical_graph()
-
+        timestamps, values = self.get_timestamp_values()
+        self.display_historical_graph(self.root.get_screen('ViewHistoryScreen').ids.chart_box, timestamps, values)
     def display_bar_graph(self):
         """
         Generate and display a line graph
         """
         screen = self.root.get_screen('ViewHistoryScreen')
         screen.graph_type = 'bar'
-        self.display_historical_graph()
-
+        timestamps, values = self.get_timestamp_values()
+        self.display_historical_graph(self.root.get_screen('ViewHistoryScreen').ids.chart_box, timestamps, values)
     def display_candlestick_graph(self):
         """
         Generate and display a line graph
         """
         screen = self.root.get_screen('ViewHistoryScreen')
         screen.graph_type = 'candlestick'
-        self.display_historical_graph()
+        timestamps, values = self.get_timestamp_values()
+        self.display_historical_graph(self.root.get_screen('ViewHistoryScreen').ids.chart_box, timestamps, values)
 
-    def display_historical_graph(self):
+    def display_historical_graph(self, box, timestamps, values):
         """
         Create and display the chart for the history screen with given max_date
         """
         plt.clf()  # clear the current plot
-        timestamps = []
-        values = []
-        screen = self.root.get_screen('ViewHistoryScreen')
-        max_previous_time = self.get_max_date()
-        for value in screen.crypto_values:
-            if value[0] >= max_previous_time:
-                timestamps.append(value[0])  # separate tuples into timestamps
-                values.append(value[1] * 0.01)
         graph = self.generate_historical_chart(timestamps, values)  # generate the chart
-        screen.ids.chart_box.clear_widgets()  # remove olds charts
-        screen.ids.chart_box.add_widget(FigureCanvasKivyAgg(graph))  # add new graph
+        box.clear_widgets()  # remove olds charts
+        box.add_widget(FigureCanvasKivyAgg(graph))  # add new graph
         plt.close(graph)
 
     def get_max_date(self):
@@ -1137,7 +1141,8 @@ class CrypTrackerApp(App):
                 if value[0] >= max_date:
                     writer.writerow(value)
 
-
+    def display_home_screen_graph(self):
+        screen = self.root.get_screen('MainDashboardScreen')
 
 
 class CustomButton(Button):
