@@ -1098,8 +1098,9 @@ class CrypTrackerApp(App):
                     timestamps_dict[timestamps[i]] = values[i]
                 days_list = []
                 for key in timestamps_dict:
-                    if datetime(year=key.year, month=key.month, day=key.day) not in days_list:
-                        days_list.append(key)
+                    day = datetime(year=key.year, month=key.month, day=key.day)
+                    if day not in days_list:
+                        days_list.append(day)
 
                 opening_prices = []
                 closing_prices = []
@@ -1109,8 +1110,8 @@ class CrypTrackerApp(App):
                 for day in days_list:  # for each day in our list
                     day_timestamps = []  # holds all the timestamps that occur on that day
                     for key in timestamps_dict:
-                        if datetime(year=key.year, month=key.month,
-                                    day=key.day) == day:  # check if timestamp occurs on that day
+                        if (datetime(year=key.year, month=key.month, day=key.day) ==
+                                datetime(year=day.year, month=day.month, day=day.day)):  # check if timestamp occurs on that day
                             day_timestamps.append(key)  # if it does, append it to our list.
                     day_timestamps.sort()  # ensure the timestamps are sorted chronologically
                     day_sum = 0
