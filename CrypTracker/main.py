@@ -721,7 +721,6 @@ class CrypTrackerApp(App):
             self.session.add(value_check)
             self.session.commit()
         self.portfolio_report_date = str(timestamp.date())
-        print(total_value)
         self.portfolio_report_total = total_value
         self.portfolio_report_previous_date = str(
             previous_value_check.timestamp.date()) if previous_value_check is not None else 'N/A'
@@ -930,7 +929,6 @@ class CrypTrackerApp(App):
         for value in api_values['prices']:
             assembled_tuple = (datetime.fromtimestamp(value[0]/1000), round(value[1]*100,2))
             screen.crypto_values.append(assembled_tuple)
-            print(assembled_tuple)
         self.display_graph()
 
     def display_ninety_day_graph(self):
