@@ -1034,7 +1034,7 @@ class CrypTrackerApp(App):
                 sys.exit(1)
         return max_previous_time
 
-    def generate_price_chart(self, timestamps, values):
+    def generate_historical_chart(self, timestamps, values):
         """
         Take the timestamps and values and generate a chart for the screen
         """
