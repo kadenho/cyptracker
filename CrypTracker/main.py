@@ -697,7 +697,6 @@ class CrypTrackerApp(App):
 
         if not is_first_value_check:
             previous_value = previous_value_check.total_value
-            print('The previous value is', previous_value)
             change_from_previous = 100 * (total_value - previous_value) // abs(previous_value) \
                 if previous_value != 0 else None
 
@@ -733,7 +732,7 @@ class CrypTrackerApp(App):
         if change_from_previous is not None:
             self.portfolio_report_change_from_previous = round(change_from_previous, 2)
         else:
-            self.portfolio_report_change_from_previous = 'N/A'
+            self.portfolio_report_change_from_previous = 0.0
 
         self.portfolio_report_change_from_investment = change_from_investment
         self.display_pie_chart(crypto_quantities)
