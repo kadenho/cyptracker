@@ -44,7 +44,8 @@ ScreenManager:
                 id: enter_password_button
                 text: 'Enter'
                 font_size: sp(30)
-                on_press: app.on_enter_password_button_press()
+                on_press:
+                    app.on_enter_password_button_press()
             Widget:
                 size_hint: (.25, 1)
         Widget:
@@ -87,7 +88,9 @@ ScreenManager:
                 id: login_button
                 text: 'Login'
                 font_size: sp(30)
-                on_press: app.on_login_button_press()
+                on_press:
+                    app.on_login_button_press()
+                    app.display_home_screen_graph()
             Widget:
                 size_hint: (.25, 1)
         Widget:
@@ -175,7 +178,7 @@ ScreenManager:
             font_size: sp(50)
             color: (1,1,1,1)
         BoxLayout:
-            size_hint: (1, 2)
+            size_hint: (1, 5)
             orientation: 'vertical'
             id: dashboard_chart_box
         BoxLayout:
@@ -269,7 +272,9 @@ ScreenManager:
                 id: about_help_back_button
                 text: 'Back'
                 font_size: sp(30)
-                on_press: app.on_about_help_back_button_press()
+                on_press:
+                    app.on_about_help_back_button_press()
+                    app.display_home_screen_graph()
             Widget:
                 size_hint: (.25, 1)
         Widget:
@@ -296,7 +301,9 @@ ScreenManager:
                 id: price_trends_back_button
                 text: 'Back'
                 font_size: sp(30)
-                on_press: app.on_price_trends_back_button_press()
+                on_press:
+                    app.on_price_trends_back_button_press()
+                    app.display_home_screen_graph()
             Widget:
                 size_hint: (.25, 1)
         Widget:
@@ -348,6 +355,7 @@ ScreenManager:
             size_hint_x: 0.8
             pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
             on_press:
+                app.display_home_screen_graph()
                 root.manager.current = 'MainDashboardScreen'
 
 <ManageCryptoCurrenciesScreen>
@@ -1054,6 +1062,7 @@ ScreenManager:
             id: select_crypto_screen_home_button
             text: 'Home'
             on_press:
+                app.display_home_screen_graph()
                 root.manager.current = 'MainDashboardScreen'
         BoxLayout:
             orientation: 'vertical'

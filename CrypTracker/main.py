@@ -10,7 +10,7 @@ import requests
 import sqlalchemy
 from kivy.uix.boxlayout import BoxLayout
 from matplotlib.dates import ConciseDateFormatter, AutoDateLocator
-from sqlalchemy import and_
+from sqlalchemy import and_, func, desc
 from sqlalchemy.exc import SQLAlchemyError
 
 # Kivy
@@ -804,15 +804,6 @@ class CrypTrackerApp(App):
                 if search_query in coin['symbol'].lower() or search_query in coin['name'].lower():
                     list_box.searched_cryptos_list.append(self.assemble_tuple(coin))
 
-            '''
-            for i in range(self.session.query(Crypto).count()):
-                current_id = self.session.query(Crypto)[i].crypto_id
-                crypto = self.session.query(Crypto).filter(Crypto.crypto_id == current_id).one()  # retrieve crypto
-
-                if search_query in crypto.symbol.lower().strip() or search_query in crypto.name.lower().strip():  # check if crypto matches the search query
-                    list_box.searched_cryptos_list.append(
-                        self.assemble_tuple(crypto, current_id))  # add crypto to list if it does
-            '''
             screen.ids.cryptos_list_boxlayout.clear_widgets()  # remove old rows
             self.display_cryptos(list_box, screen)
 
@@ -924,6 +915,7 @@ class CrypTrackerApp(App):
             screen.crypto_values.append(assembled_tuple)
         timestamps, values = self.get_timestamp_values()
         self.display_historical_graph(self.root.get_screen('ViewHistoryScreen').ids.chart_box, timestamps, values)
+
     def get_timestamp_values(self):
         timestamps = []
         values = []
@@ -1143,6 +1135,16 @@ class CrypTrackerApp(App):
 
     def display_home_screen_graph(self):
         screen = self.root.get_screen('MainDashboardScreen')
+        crypto_quantities = self.get_quantities_and_investments()
+        most_invested_coin = max(crypto_quantities, key=lambda k: crypto_quantities[k][2])
+        api_values = coin_gecko_api.get_coin_market_chart_by_id(most_invested_coin, 'usd', 7)
+        print(api_values)
+        timestamps = []
+        values = []
+        for value in api_values['prices']:
+            timestamps.append(datetime.fromtimestamp(value[0]/1000))
+            values.append(value[1]*0.01)
+        self.display_historical_graph(screen.ids.dashboard_chart_box, timestamps, values)
 
 
 class CustomButton(Button):
