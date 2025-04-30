@@ -465,6 +465,7 @@ class CrypTrackerApp(App):
         plt.title('Current Holdings')  # title the chart
         chart_screen.ids.pie_chart_box.clear_widgets()  # remove the old chart
         chart_screen.ids.pie_chart_box.add_widget(FigureCanvasKivyAgg(plt.gcf()))  # add the new chart
+        plt.close()
 
     def add_crypto(self, name, symbol):
         """
