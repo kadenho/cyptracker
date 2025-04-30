@@ -1138,7 +1138,6 @@ class CrypTrackerApp(App):
         crypto_quantities = self.get_quantities_and_investments()
         most_invested_coin = max(crypto_quantities, key=lambda k: crypto_quantities[k][2])
         api_values = coin_gecko_api.get_coin_market_chart_by_id(most_invested_coin, 'usd', 7)
-        print(api_values)
         timestamps = []
         values = []
         for value in api_values['prices']:
