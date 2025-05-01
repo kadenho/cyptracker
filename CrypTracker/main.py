@@ -1136,14 +1136,15 @@ class CrypTrackerApp(App):
     def display_home_screen_graph(self):
         screen = self.root.get_screen('MainDashboardScreen')
         crypto_quantities = self.get_quantities_and_investments()
-        most_invested_coin = max(crypto_quantities, key=lambda k: crypto_quantities[k][2])
-        api_values = coin_gecko_api.get_coin_market_chart_by_id(most_invested_coin, 'usd', 7)
-        timestamps = []
-        values = []
-        for value in api_values['prices']:
-            timestamps.append(datetime.fromtimestamp(value[0]/1000))
-            values.append(value[1]*0.01)
-        self.display_historical_graph(screen.ids.dashboard_chart_box, timestamps, values)
+        if crypto_quantities:
+            most_invested_coin = max(crypto_quantities, key=lambda k: crypto_quantities[k][2])
+            api_values = coin_gecko_api.get_coin_market_chart_by_id(most_invested_coin, 'usd', 7)
+            timestamps = []
+            values = []
+            for value in api_values['prices']:
+                timestamps.append(datetime.fromtimestamp(value[0]/1000))
+                values.append(value[1]*0.01)
+            self.display_historical_graph(screen.ids.dashboard_chart_box, timestamps, values)
 
 
 class CustomButton(Button):
