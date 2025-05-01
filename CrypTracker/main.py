@@ -1145,6 +1145,8 @@ class CrypTrackerApp(App):
                 timestamps.append(datetime.fromtimestamp(value[0]/1000))
                 values.append(value[1]*0.01)
             self.display_historical_graph(screen.ids.dashboard_chart_box, timestamps, values)
+        else:
+            screen.ids.dashboard_chart_box.clear_widgets()
 
 
 class CustomButton(Button):
