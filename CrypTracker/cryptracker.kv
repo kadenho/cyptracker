@@ -1002,7 +1002,7 @@ ScreenManager:
 #Historical price viewer
 
 <Text>:
-    color: (0.0, 0.0, 0.0)
+    color: (1.0, 1.0, 1.0)
     outline_width: 0
     size_hint: (1, 1)
     text_size: self.width, None
@@ -1010,22 +1010,14 @@ ScreenManager:
     valign: 'middle'
 
 <FormattedButton>
-    background_color: (0.25, 0.25, 0.25)
-    color: (1.0, 1.0, 1.0)
+    background_color: (1, 1, 1, 0)
+    color: (0.0, 0.0, 0.0)
     size_hint: (1, 1)
     text_size: self.width, None
     outline_width: 0
     height: self.texture_size[1]
     halign: 'center'
     valign: 'middle'
-
-<ScreenBoxLayout>
-    canvas.before:
-        Color:
-            rgba: (0.95, 0.95, 0.95, 1.0)
-        Rectangle:
-            pos: self.pos
-            size: self.size
 
 <BackButton>
     size_hint: (0.25,0.1)
@@ -1036,9 +1028,8 @@ ScreenManager:
 
     Button:
         text: '[' + root.crypto_symbol + '] ' + root.crypto_name
-        outline_color: [0.0, 0.0, 0.0, 0.0]
-        background_color: (0.25, 0.25, 0.25)
-        color: (1.0, 1.0, 1.0)
+        outline_width: 0
+        background_color: (1, 1, 1, 0)
         size_hint: (0.5, 1)
         text_size: self.width, None
         height: self.texture_size[1]
@@ -1060,7 +1051,7 @@ ScreenManager:
 
 <SelectCryptoScreen>
 
-    ScreenBoxLayout:
+    BoxLayout:
         orientation: 'vertical'
 
         BackButton:
@@ -1094,8 +1085,7 @@ ScreenManager:
                     Button:
                         id: select_crypto_enter_button
                         text: 'Search'
-                        background_color: (0.25, 0.25, 0.25)
-                        color: (1.0, 1.0, 1.0)
+                        background_color: (1, 1, 1, 0)
                         text_size: self.width, None
                         outline_width: 0
                         height: self.texture_size[1]
@@ -1134,7 +1124,7 @@ ScreenManager:
 
 <ViewHistoryScreen>:
 
-    ScreenBoxLayout:
+    BoxLayout:
         orientation: 'vertical'
 
         BackButton:
