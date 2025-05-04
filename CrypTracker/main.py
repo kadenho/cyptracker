@@ -10,7 +10,7 @@ import requests
 import sqlalchemy
 from kivy.uix.boxlayout import BoxLayout
 from matplotlib.dates import ConciseDateFormatter, AutoDateLocator
-from sqlalchemy import and_, func, desc
+from sqlalchemy import and_
 from sqlalchemy.exc import SQLAlchemyError
 
 # Kivy
