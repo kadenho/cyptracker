@@ -93,7 +93,8 @@ class CreateProfileScreen(Screen):
 
 
 class MainDashboardScreen(Screen):
-    pass
+    def reset_page(self):
+        pass
 
 
 class AboutHelpScreen(Screen):
@@ -213,7 +214,8 @@ class PieChartScreen(Screen):
 
 
 class SelectCryptoScreen(Screen):
-    pass
+    def reset_page(self):
+        pass
 
 
 class ViewHistoryScreen(Screen):
@@ -223,8 +225,8 @@ class ViewHistoryScreen(Screen):
     crypto_percent_change = StringProperty()
     graph_type = StringProperty('line')
     graph_range = StringProperty('90_day')
-
-    pass
+    def reset_page(self):
+        pass
 
 
 class Text(Label):
@@ -786,11 +788,14 @@ class CrypTrackerApp(App):
         coins = self.pull_api_coins()
         for coin in coins:
             list_box.searched_cryptos_list.append(self.assemble_tuple(coin))
-        list_box.searched_cryptos_list = sorted(list_box.searched_cryptos_list, key=lambda x: x[0])
-        screen = self.root.get_screen('SelectCryptoScreen')
-        screen.ids.cryptos_list_boxlayout.clear_widgets()  # clear the old list
-        screen.ids.select_crypto_text_input.text = ''
-        self.display_cryptos(list_box, screen)
+        try:
+            list_box.searched_cryptos_list = sorted(list_box.searched_cryptos_list, key=lambda x: x[0])
+            screen = self.root.get_screen('SelectCryptoScreen')
+            screen.ids.cryptos_list_boxlayout.clear_widgets()  # clear the old list
+            screen.ids.select_crypto_text_input.text = ''
+            self.display_cryptos(list_box, screen)
+        except TypeError:
+            self.display_popup('API Error', 'You are attempting to call data from the API too fast. Please wait and try again.', 'MainDashboardScreen')
 
     def repopulate_list(self):
         """
@@ -804,13 +809,19 @@ class CrypTrackerApp(App):
         if search_query == '':
             self.populate_list()  # populate the list with default values
         else:
-            coins = self.pull_api_coins()
-            for coin in coins:
-                if search_query in coin['symbol'].lower() or search_query in coin['name'].lower():
-                    list_box.searched_cryptos_list.append(self.assemble_tuple(coin))
 
-            screen.ids.cryptos_list_boxlayout.clear_widgets()  # remove old rows
-            self.display_cryptos(list_box, screen)
+            try:
+                coins = self.pull_api_coins()
+                for coin in coins:
+                    if search_query in coin['symbol'].lower() or search_query in coin['name'].lower():
+                        list_box.searched_cryptos_list.append(self.assemble_tuple(coin))
+
+                screen.ids.cryptos_list_boxlayout.clear_widgets()  # remove old rows
+                self.display_cryptos(list_box, screen)
+            except TypeError:
+                self.display_popup('API Error',
+                                   'You are attempting to call data from the API too fast. Please wait and try again.',
+                                   'MainDashboardScreen')
 
     def pull_api_coins(self):
         url = "https://api.coingecko.com/api/v3/coins/markets"
@@ -829,13 +840,16 @@ class CrypTrackerApp(App):
         """
         retrieve data and package into a tuple to be added to the list
         """
-        crypto_symbol = coin['symbol']  # retrieve crypto's symbol
-        crypto_name = coin['name']  # retrieve crypto's name
-        today_price = str(coin['current_price'])
-        percent_change = str(round(coin['price_change_percentage_24h'],2))
-        crypto_id = coin['id']
-        assembled_tuple = (crypto_symbol, crypto_name, today_price, percent_change, crypto_id)  # package data into a tuple
-        return assembled_tuple  # return the assembled tuple
+        try:
+            crypto_symbol = coin['symbol']  # retrieve crypto's symbol
+            crypto_name = coin['name']  # retrieve crypto's name
+            today_price = str(coin['current_price'])
+            percent_change = str(round(coin['price_change_percentage_24h'],2))
+            crypto_id = coin['id']
+            assembled_tuple = (crypto_symbol, crypto_name, today_price, percent_change, crypto_id)  # package data into a tuple
+            return assembled_tuple  # return the assembled tuple
+        except TypeError:
+            self.display_popup('API Error', 'You are attempting to call data from the API too fast. Please wait and try again.', 'MainDashboardScreen')
 
     def display_cryptos(self, list_box, screen):
         if len(list_box.searched_cryptos_list) >= 5:
