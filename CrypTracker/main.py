@@ -496,8 +496,8 @@ class CrypTrackerApp(App):
         """
 
         try:
-            added_crypto_id = list(filter(lambda dictionary: dictionary["symbol"] == symbol.lower() \
-                                                             and dictionary["name"] == name,
+            added_crypto_id = list(filter(lambda dictionary: dictionary["symbol"] == symbol.lower().strip() \
+                                                             and dictionary["name"] == name.strip(),
                                           coin_gecko_api.get_coins_list()))[0]['id']
         except IndexError:
             popup_title = 'Crypto not found'
