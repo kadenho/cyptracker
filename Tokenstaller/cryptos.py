@@ -1,5 +1,5 @@
 import sqlalchemy
-from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, DateTime, DateTime, Index, \
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, DateTime, Index, \
     ForeignKeyConstraint
 from sqlalchemy.orm import sessionmaker, relationship
 
@@ -41,6 +41,7 @@ class PortfolioEntry(Persisted):
                     'PortfolioEntry.crypto_id==CryptoPrice.crypto_id)'
     )
 
+
 class CryptoPrice(Persisted):
     __tablename__ = 'crypto_prices'
     crypto_id = Column(String(64), ForeignKey('cryptos.crypto_id', ondelete='CASCADE'), primary_key=True,
@@ -59,6 +60,7 @@ class CryptoPrice(Persisted):
         Index('idx_crypto_id', 'crypto_id'),
         Index('idx_timestamp', 'timestamp'),
     )
+
 
 class ValueCheck(Persisted):
     __tablename__ = 'value_checks'

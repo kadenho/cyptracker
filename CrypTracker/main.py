@@ -4,31 +4,28 @@ import re
 import sys
 from datetime import datetime, date, timedelta, time
 
+import mplfinance as mpf
 import pandas as pd
 import requests
 # SQLAlchemy
 import sqlalchemy
-from kivy.uix.boxlayout import BoxLayout
-from matplotlib.dates import ConciseDateFormatter, AutoDateLocator
-from sqlalchemy import and_
-from sqlalchemy.exc import SQLAlchemyError
-
 # Kivy
 from kivy.app import App
+from kivy.core.window import Window
+from kivy.modules import inspector
+from kivy.properties import StringProperty, NumericProperty, ColorProperty, ListProperty
+from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.label import Label
 from kivy.uix.popup import Popup
 from kivy.uix.screenmanager import Screen, ScreenManager
-from kivy.properties import StringProperty, NumericProperty, ColorProperty, ListProperty
-from kivy.modules import inspector
-from kivy.core.window import Window
-
 # Kivy Garden
 from kivy_garden.matplotlib import FigureCanvasKivyAgg
-
 # Matplotlib
 from matplotlib import pyplot as plt
-import mplfinance as mpf
+from matplotlib.dates import ConciseDateFormatter, AutoDateLocator
+from sqlalchemy import and_
+from sqlalchemy.exc import SQLAlchemyError
 
 # Disables flooding the console with debug messages on graph render
 plt.set_loglevel(level='warning')
@@ -854,7 +851,7 @@ class CrypTrackerApp(App):
             percent_change = str(round(coin['price_change_percentage_24h'], 2))
             crypto_id = coin['id']
             assembled_tuple = (
-            crypto_symbol, crypto_name, today_price, percent_change, crypto_id)  # package data into a tuple
+                crypto_symbol, crypto_name, today_price, percent_change, crypto_id)  # package data into a tuple
             return assembled_tuple  # return the assembled tuple
         except TypeError:
             self.display_popup('API Error',
