@@ -1179,7 +1179,7 @@ class CrypTrackerApp(App):
             values = []
             for value in api_values['prices']:
                 timestamps.append(datetime.fromtimestamp(value[0] / 1000))
-                values.append(value[1] * 0.01)
+                values.append(round(value[1] * 100, 2))
             self.display_historical_graph(screen.ids.dashboard_chart_box, timestamps, values)
         else:
             screen.ids.dashboard_chart_box.clear_widgets()
