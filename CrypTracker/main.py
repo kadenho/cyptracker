@@ -486,15 +486,17 @@ class CrypTrackerApp(App):
         :return: None
         """
 
-        '''Filters the full list of coins using the lambda function, then gets converted
+        """
+        Filters the full list of coins using the lambda function, then gets converted
         to a list so it can access each dictionary fitting the criteria.
         Result is a list of dictionaries with keys {'id':, 'name':, 'symbol':}
         that have the same name and symbol as the arguments to this method,
         then you take the value of the dictionary's id.
-        Error handled for case of there being no crypto that fits.'''
+        Error handled for case of there being no crypto that fits.
+        """
 
         try:
-            added_crypto_id = list(filter(lambda dictionary: dictionary["symbol"] == symbol \
+            added_crypto_id = list(filter(lambda dictionary: dictionary["symbol"] == symbol.lower() \
                                                              and dictionary["name"] == name,
                                           coin_gecko_api.get_coins_list()))[0]['id']
         except IndexError:
