@@ -80,9 +80,11 @@ def text_color_from_value(text, lower, upper):
 class MySQLPasswordScreen(Screen):
     def reset_page(self):
         self.ids.password_text_input.text = ''
-        
+
+
 class PriceTrendsScreen(Screen):
     pass
+
 
 class UserLoginScreen(Screen):
     pass
@@ -225,6 +227,7 @@ class ViewHistoryScreen(Screen):
     crypto_percent_change = StringProperty()
     graph_type = StringProperty('line')
     graph_range = StringProperty('90_day')
+
     def reset_page(self):
         pass
 
@@ -325,10 +328,13 @@ class CrypTrackerApp(App):
 
     def on_portfolio_button_press(self):
         self.sm.current = 'Portfolio Menu'
+
     def on_price_trends_button_press(self):
         self.sm.current = 'PriceTrendsScreen'
+
     def on_price_trends_back_button_press(self):
         self.sm.current = 'MainDashboardScreen'
+
     def on_enter_password_button_press(self):
         try:
             screen = self.sm.get_screen('MySQLPasswordScreen')
@@ -336,7 +342,7 @@ class CrypTrackerApp(App):
             url = CryptoDatabase.construct_mysql_url('localhost', 3306, 'cryptos', 'root', password)
             self.crypto_database = CryptoDatabase(url)
             self.session = self.crypto_database.create_session()
-            users = self.session.query(User).all() #make any database call to elicit an error in the password
+            users = self.session.query(User).all()  # make any database call to elicit an error in the password
             self.update_usernames()
             self.sm.add_widget(PortfolioMenuScreen(name='Portfolio Menu'))
             self.sm.add_widget(ManageCryptocurrenciesScreen(name='Manage Cryptocurrencies'))
@@ -353,9 +359,8 @@ class CrypTrackerApp(App):
             self.sm.add_widget(PriceTrendsScreen(name='PriceTrendsScreen'))
             self.sm.current = 'UserLoginScreen'
         except sqlalchemy.exc.ProgrammingError:
-            self.display_popup('Password Error', 'Please re-enter your password and try again.','MySQLPasswordScreen')
+            self.display_popup('Password Error', 'Please re-enter your password and try again.', 'MySQLPasswordScreen')
             self.sm.current = 'MySQLPasswordScreen'
-
 
     def on_create_username_button_press(self):
         screen = self.sm.get_screen('CreateProfileScreen')
@@ -794,7 +799,9 @@ class CrypTrackerApp(App):
             screen.ids.select_crypto_text_input.text = ''
             self.display_cryptos(list_box, screen)
         except TypeError:
-            self.display_popup('API Error', 'You are attempting to call data from the API too fast. Please wait and try again.', 'MainDashboardScreen')
+            self.display_popup('API Error',
+                               'You are attempting to call data from the API too fast. Please wait and try again.',
+                               'MainDashboardScreen')
 
     def repopulate_list(self):
         """
@@ -844,12 +851,15 @@ class CrypTrackerApp(App):
             crypto_symbol = coin['symbol']  # retrieve crypto's symbol
             crypto_name = coin['name']  # retrieve crypto's name
             today_price = str(coin['current_price'])
-            percent_change = str(round(coin['price_change_percentage_24h'],2))
+            percent_change = str(round(coin['price_change_percentage_24h'], 2))
             crypto_id = coin['id']
-            assembled_tuple = (crypto_symbol, crypto_name, today_price, percent_change, crypto_id)  # package data into a tuple
+            assembled_tuple = (
+            crypto_symbol, crypto_name, today_price, percent_change, crypto_id)  # package data into a tuple
             return assembled_tuple  # return the assembled tuple
         except TypeError:
-            self.display_popup('API Error', 'You are attempting to call data from the API too fast. Please wait and try again.', 'MainDashboardScreen')
+            self.display_popup('API Error',
+                               'You are attempting to call data from the API too fast. Please wait and try again.',
+                               'MainDashboardScreen')
 
     @staticmethod
     def display_cryptos(list_box, screen):
@@ -858,13 +868,13 @@ class CrypTrackerApp(App):
                 (symbol, name, value, percent_change, crypto_id) = list_box.searched_cryptos_list[i]  # retrieve values
                 screen.ids.cryptos_list_boxlayout.add_widget(
                     SelectCryptoBox(crypto_symbol=symbol, crypto_name=name, crypto_value=value,
-                                  crypto_percent_change=percent_change, crypto_id=crypto_id))  # display values
+                                    crypto_percent_change=percent_change, crypto_id=crypto_id))  # display values
         elif 0 < len(list_box.searched_cryptos_list) <= 4:
             for i in range(len(list_box.searched_cryptos_list)):
                 (symbol, name, value, percent_change, crypto_id) = list_box.searched_cryptos_list[i]  # retrieve values
                 screen.ids.cryptos_list_boxlayout.add_widget(
                     SelectCryptoBox(crypto_symbol=symbol, crypto_name=name, crypto_value=value,
-                                  crypto_percent_change=percent_change, crypto_id=crypto_id))  # display values
+                                    crypto_percent_change=percent_change, crypto_id=crypto_id))  # display values
         elif len(list_box.searched_cryptos_list) == 0:  # if no cryptos match the search query
             screen.ids.cryptos_list_boxlayout.add_widget(  # notify user no results were found
                 Text(text='No results found', font_size=25))
@@ -931,7 +941,7 @@ class CrypTrackerApp(App):
         api_values = coin_gecko_api.get_coin_market_chart_by_id(selected_crypto['id'], 'usd', 90)
         screen.crypto_values = []
         for value in api_values['prices']:
-            assembled_tuple = (datetime.fromtimestamp(value[0]/1000), round(value[1]*100,2))
+            assembled_tuple = (datetime.fromtimestamp(value[0] / 1000), round(value[1] * 100, 2))
             screen.crypto_values.append(assembled_tuple)
         timestamps, values = self.get_timestamp_values()
         self.display_historical_graph(self.root.get_screen('ViewHistoryScreen').ids.chart_box, timestamps, values)
@@ -956,6 +966,7 @@ class CrypTrackerApp(App):
         screen.graph_range = '90_day'
         timestamps, values = self.get_timestamp_values()
         self.display_historical_graph(self.root.get_screen('ViewHistoryScreen').ids.chart_box, timestamps, values)
+
     def display_thirty_day_graph(self):
         """
         Generate and display the chart for the past 30 days
@@ -965,6 +976,7 @@ class CrypTrackerApp(App):
         screen.graph_range = '30_day'
         timestamps, values = self.get_timestamp_values()
         self.display_historical_graph(self.root.get_screen('ViewHistoryScreen').ids.chart_box, timestamps, values)
+
     def display_seven_day_graph(self):
         """
         Generate and display the chart for the past 7 days
@@ -973,6 +985,7 @@ class CrypTrackerApp(App):
         screen.graph_range = '7_day'
         timestamps, values = self.get_timestamp_values()
         self.display_historical_graph(self.root.get_screen('ViewHistoryScreen').ids.chart_box, timestamps, values)
+
     def display_one_day_graph(self):
         """
         Generate and display the chart for the day
@@ -981,6 +994,7 @@ class CrypTrackerApp(App):
         screen.graph_range = '1_day'
         timestamps, values = self.get_timestamp_values()
         self.display_historical_graph(self.root.get_screen('ViewHistoryScreen').ids.chart_box, timestamps, values)
+
     def display_line_graph(self):
         """
         Generate and display a line graph
@@ -989,6 +1003,7 @@ class CrypTrackerApp(App):
         screen.graph_type = 'line'
         timestamps, values = self.get_timestamp_values()
         self.display_historical_graph(self.root.get_screen('ViewHistoryScreen').ids.chart_box, timestamps, values)
+
     def display_bar_graph(self):
         """
         Generate and display a line graph
@@ -997,6 +1012,7 @@ class CrypTrackerApp(App):
         screen.graph_type = 'bar'
         timestamps, values = self.get_timestamp_values()
         self.display_historical_graph(self.root.get_screen('ViewHistoryScreen').ids.chart_box, timestamps, values)
+
     def display_candlestick_graph(self):
         """
         Generate and display a line graph
@@ -1110,7 +1126,8 @@ class CrypTrackerApp(App):
                     day_timestamps = []  # holds all the timestamps that occur on that day
                     for key in timestamps_dict:
                         if (datetime(year=key.year, month=key.month, day=key.day) ==
-                                datetime(year=day.year, month=day.month, day=day.day)):  # check if timestamp occurs on that day
+                                datetime(year=day.year, month=day.month,
+                                         day=day.day)):  # check if timestamp occurs on that day
                             day_timestamps.append(key)  # if it does, append it to our list.
                     day_timestamps.sort()  # ensure the timestamps are sorted chronologically
                     day_sum = 0
@@ -1162,8 +1179,8 @@ class CrypTrackerApp(App):
             timestamps = []
             values = []
             for value in api_values['prices']:
-                timestamps.append(datetime.fromtimestamp(value[0]/1000))
-                values.append(value[1]*0.01)
+                timestamps.append(datetime.fromtimestamp(value[0] / 1000))
+                values.append(value[1] * 0.01)
             self.display_historical_graph(screen.ids.dashboard_chart_box, timestamps, values)
         else:
             screen.ids.dashboard_chart_box.clear_widgets()
