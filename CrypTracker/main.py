@@ -287,7 +287,6 @@ class CrypTrackerApp(App):
         self.sm.add_widget(CreateProfileScreen(name='CreateProfileScreen'))
         self.sm.add_widget(MainDashboardScreen(name='MainDashboardScreen'))
         self.sm.add_widget(AboutHelpScreen(name='AboutHelpScreen'))
-
         return self.sm
 
     def on_historical_price_button_press(self):
@@ -852,7 +851,8 @@ class CrypTrackerApp(App):
         except TypeError:
             self.display_popup('API Error', 'You are attempting to call data from the API too fast. Please wait and try again.', 'MainDashboardScreen')
 
-    def display_cryptos(self, list_box, screen):
+    @staticmethod
+    def display_cryptos(list_box, screen):
         if len(list_box.searched_cryptos_list) >= 5:
             for i in range(5):
                 (symbol, name, value, percent_change, crypto_id) = list_box.searched_cryptos_list[i]  # retrieve values
