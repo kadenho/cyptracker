@@ -823,7 +823,8 @@ class CrypTrackerApp(App):
                                    'You are attempting to call data from the API too fast. Please wait and try again.',
                                    'MainDashboardScreen')
 
-    def pull_api_coins(self):
+    @staticmethod
+    def pull_api_coins():
         url = "https://api.coingecko.com/api/v3/coins/markets"
         params = {
             "vs_currency": "usd",
