@@ -943,7 +943,7 @@ class CrypTrackerApp(App):
             assembled_tuple = (datetime.fromtimestamp(value[0] / 1000), round(value[1] * 100, 2))
             screen.crypto_values.append(assembled_tuple)
         timestamps, values = self.get_timestamp_values()
-        self.display_historical_graph(self.root.get_screen('ViewHistoryScreen').ids.chart_box, timestamps, values)
+        self.display_historical_graph(self.root.get_screen('ViewHistoryScreen').ids.chart_box, timestamps, values,  screen.crypto_name)
 
     def get_timestamp_values(self):
         timestamps = []
@@ -964,7 +964,7 @@ class CrypTrackerApp(App):
         screen = self.root.get_screen('ViewHistoryScreen')
         screen.graph_range = '90_day'
         timestamps, values = self.get_timestamp_values()
-        self.display_historical_graph(self.root.get_screen('ViewHistoryScreen').ids.chart_box, timestamps, values)
+        self.display_historical_graph(self.root.get_screen('ViewHistoryScreen').ids.chart_box, timestamps, values,  screen.crypto_name)
 
     def display_thirty_day_graph(self):
         """
@@ -974,7 +974,7 @@ class CrypTrackerApp(App):
         screen = self.root.get_screen('ViewHistoryScreen')
         screen.graph_range = '30_day'
         timestamps, values = self.get_timestamp_values()
-        self.display_historical_graph(self.root.get_screen('ViewHistoryScreen').ids.chart_box, timestamps, values)
+        self.display_historical_graph(self.root.get_screen('ViewHistoryScreen').ids.chart_box, timestamps, values,  screen.crypto_name)
 
     def display_seven_day_graph(self):
         """
@@ -983,7 +983,7 @@ class CrypTrackerApp(App):
         screen = self.root.get_screen('ViewHistoryScreen')
         screen.graph_range = '7_day'
         timestamps, values = self.get_timestamp_values()
-        self.display_historical_graph(self.root.get_screen('ViewHistoryScreen').ids.chart_box, timestamps, values)
+        self.display_historical_graph(self.root.get_screen('ViewHistoryScreen').ids.chart_box, timestamps, values,  screen.crypto_name)
 
     def display_one_day_graph(self):
         """
@@ -992,7 +992,7 @@ class CrypTrackerApp(App):
         screen = self.root.get_screen('ViewHistoryScreen')
         screen.graph_range = '1_day'
         timestamps, values = self.get_timestamp_values()
-        self.display_historical_graph(self.root.get_screen('ViewHistoryScreen').ids.chart_box, timestamps, values)
+        self.display_historical_graph(self.root.get_screen('ViewHistoryScreen').ids.chart_box, timestamps, values,  screen.crypto_name)
 
     def display_line_graph(self):
         """
@@ -1001,7 +1001,7 @@ class CrypTrackerApp(App):
         screen = self.root.get_screen('ViewHistoryScreen')
         screen.graph_type = 'line'
         timestamps, values = self.get_timestamp_values()
-        self.display_historical_graph(self.root.get_screen('ViewHistoryScreen').ids.chart_box, timestamps, values)
+        self.display_historical_graph(self.root.get_screen('ViewHistoryScreen').ids.chart_box, timestamps, values,  screen.crypto_name)
 
     def display_bar_graph(self):
         """
@@ -1010,7 +1010,7 @@ class CrypTrackerApp(App):
         screen = self.root.get_screen('ViewHistoryScreen')
         screen.graph_type = 'bar'
         timestamps, values = self.get_timestamp_values()
-        self.display_historical_graph(self.root.get_screen('ViewHistoryScreen').ids.chart_box, timestamps, values)
+        self.display_historical_graph(self.root.get_screen('ViewHistoryScreen').ids.chart_box, timestamps, values,  screen.crypto_name)
 
     def display_candlestick_graph(self):
         """
@@ -1019,14 +1019,14 @@ class CrypTrackerApp(App):
         screen = self.root.get_screen('ViewHistoryScreen')
         screen.graph_type = 'candlestick'
         timestamps, values = self.get_timestamp_values()
-        self.display_historical_graph(self.root.get_screen('ViewHistoryScreen').ids.chart_box, timestamps, values)
+        self.display_historical_graph(self.root.get_screen('ViewHistoryScreen').ids.chart_box, timestamps, values,  screen.crypto_name)
 
-    def display_historical_graph(self, box, timestamps, values):
+    def display_historical_graph(self, box, timestamps, values, title):
         """
         Create and display the chart for the history screen with given max_date
         """
         plt.clf()  # clear the current plot
-        graph = self.generate_historical_chart(timestamps, values)  # generate the chart
+        graph = self.generate_historical_chart(timestamps, values, title)  # generate the chart
         box.clear_widgets()  # remove olds charts
         box.add_widget(FigureCanvasKivyAgg(graph))  # add new graph
         plt.close(graph)
@@ -1048,7 +1048,7 @@ class CrypTrackerApp(App):
                 sys.exit(1)
         return max_previous_time
 
-    def generate_historical_chart(self, timestamps, values):
+    def generate_historical_chart(self, timestamps, values, title):
         """
         Take the timestamps and values and generate a chart for the screen
         """
@@ -1087,7 +1087,7 @@ class CrypTrackerApp(App):
                     plt.gca().get_lines()[0].set_color("#158a41")  # set color green
                 else:  # price stayed the same over course of the chart
                     plt.gca().get_lines()[0].set_color("cornflowerblue")  # set color blue
-                plt.title(screen.crypto_name)  # title the graph
+                plt.title(title)  # title the graph
                 return plt.gcf()
             case 'bar':
                 categories = ['Max', 'Mean', 'Min']
@@ -1095,7 +1095,7 @@ class CrypTrackerApp(App):
                 plt.style.use('default')
                 plt.bar(categories, [max_value, mean_value, minimum_value], color=colors)
                 plt.ylabel('Price')
-                plt.title(screen.crypto_name)  # title the graph
+                plt.title(title)  # title the graph
                 plt.axhline(y=max_value, color='#158a41', linestyle='--', linewidth=1)  # add line for max value
                 plt.text(-0.3, max_value, f'Max: {round(max_value, 2)}',
                          fontsize=12)  # add label max value line
@@ -1115,7 +1115,6 @@ class CrypTrackerApp(App):
                     day = datetime(year=key.year, month=key.month, day=key.day)
                     if day not in days_list:
                         days_list.append(day)
-
                 opening_prices = []
                 closing_prices = []
                 average_prices = []
@@ -1150,7 +1149,7 @@ class CrypTrackerApp(App):
                     'Close': closing_prices
                 }
                 dataframe = pd.DataFrame(data, index=pd.DatetimeIndex(days_list))
-                fig, ax = mpf.plot(dataframe, type='candle', style='charles', title=screen.crypto_name, ylabel='Price',
+                fig, ax = mpf.plot(dataframe, type='candle', style='charles', title=title, ylabel='Price',
                                    returnfig=True)
                 ax[0].yaxis.set_label_position("left")
                 ax[0].yaxis.tick_left()
@@ -1174,13 +1173,14 @@ class CrypTrackerApp(App):
         crypto_quantities = self.get_quantities_and_investments()
         if crypto_quantities:
             most_invested_coin = max(crypto_quantities, key=lambda k: crypto_quantities[k][2])
+            print(most_invested_coin)
             api_values = coin_gecko_api.get_coin_market_chart_by_id(most_invested_coin, 'usd', 7)
             timestamps = []
             values = []
             for value in api_values['prices']:
                 timestamps.append(datetime.fromtimestamp(value[0] / 1000))
                 values.append(round(value[1] * 100, 2))
-            self.display_historical_graph(screen.ids.dashboard_chart_box, timestamps, values)
+            self.display_historical_graph(screen.ids.dashboard_chart_box, timestamps, values, most_invested_coin)
         else:
             screen.ids.dashboard_chart_box.clear_widgets()
 
