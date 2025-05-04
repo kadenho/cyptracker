@@ -78,7 +78,9 @@ def text_color_from_value(text, lower, upper):
 
 # Main App Screens
 class MySQLPasswordScreen(Screen):
-    pass
+    def reset_page(self):
+        self.ids.password_text_input.text = ''
+        
 class PriceTrendsScreen(Screen):
     pass
 
@@ -327,12 +329,13 @@ class CrypTrackerApp(App):
     def on_price_trends_back_button_press(self):
         self.sm.current = 'MainDashboardScreen'
     def on_enter_password_button_press(self):
-        screen = self.sm.get_screen('MySQLPasswordScreen')
         try:
+            screen = self.sm.get_screen('MySQLPasswordScreen')
             password = screen.ids.password_text_input.text
             url = CryptoDatabase.construct_mysql_url('localhost', 3306, 'cryptos', 'root', password)
             self.crypto_database = CryptoDatabase(url)
             self.session = self.crypto_database.create_session()
+            users = self.session.query(User).all() #make any database call to elicit an error in the password
             self.update_usernames()
             self.sm.add_widget(PortfolioMenuScreen(name='Portfolio Menu'))
             self.sm.add_widget(ManageCryptocurrenciesScreen(name='Manage Cryptocurrencies'))
@@ -348,8 +351,10 @@ class CrypTrackerApp(App):
             self.sm.add_widget(ViewHistoryScreen(name='ViewHistoryScreen'))
             self.sm.add_widget(PriceTrendsScreen(name='PriceTrendsScreen'))
             self.sm.current = 'UserLoginScreen'
-        except Exception as e:
-            print('Error connecting to MySQL:', e)
+        except sqlalchemy.exc.ProgrammingError:
+            self.display_popup('Password Error', 'Please re-enter your password and try again.','MySQLPasswordScreen')
+            self.sm.current = 'MySQLPasswordScreen'
+
 
     def on_create_username_button_press(self):
         screen = self.sm.get_screen('CreateProfileScreen')
