@@ -999,8 +999,11 @@ ScreenManager:
     outline_color: [1.0, 1.0, 1.0, 1.0]
     color: [0.0, 0.0, 0.0, 1.0]
 
+#Historical price viewer
+
 <Text>:
     color: (0.0, 0.0, 0.0)
+    outline_width: 0
     size_hint: (1, 1)
     text_size: self.width, None
     halign: 'center'
@@ -1011,6 +1014,7 @@ ScreenManager:
     color: (1.0, 1.0, 1.0)
     size_hint: (1, 1)
     text_size: self.width, None
+    outline_width: 0
     height: self.texture_size[1]
     halign: 'center'
     valign: 'middle'
@@ -1025,6 +1029,7 @@ ScreenManager:
 
 <BackButton>
     size_hint: (0.25,0.1)
+    outline_width: 0
 
 <SelectCryptoBox>
     orientation: 'horizontal'
@@ -1092,6 +1097,7 @@ ScreenManager:
                         background_color: (0.25, 0.25, 0.25)
                         color: (1.0, 1.0, 1.0)
                         text_size: self.width, None
+                        outline_width: 0
                         height: self.texture_size[1]
                         halign: 'center'
                         valign: 'middle'
