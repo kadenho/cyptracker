@@ -35,10 +35,10 @@ from Tokenstaller.cryptos import Crypto, PortfolioEntry, CryptoPrice, ValueCheck
 
 # External API
 from pycoingecko import CoinGeckoAPI
-from apikey import COINGECKO_API_KEY
+#from apikey import COINGECKO_API_KEY
 
-coin_gecko_api = CoinGeckoAPI(demo_api_key=COINGECKO_API_KEY)
-
+#coin_gecko_api = CoinGeckoAPI(demo_api_key=COINGECKO_API_KEY)
+COINGECKO_API_KEY =  'CG-DqhNSdsRLAMhwMxUt39uthJY'
 
 def text_color_from_value(text, lower, upper):
     """
@@ -359,6 +359,12 @@ class CrypTrackerApp(App):
             self.display_popup('Password Error', 'Please re-enter your password and try again.', 'MySQLPasswordScreen')
             self.sm.current = 'MySQLPasswordScreen'
 
+    @staticmethod
+    def _on_create_username_button_press(session, username):
+        new_user = User(username=username)
+        session.add(new_user)
+        session.commit()
+
     def on_create_username_button_press(self):
         screen = self.sm.get_screen('CreateProfileScreen')
         username = screen.ids.new_username_text_input.text
@@ -370,18 +376,13 @@ class CrypTrackerApp(App):
             screen.ids.username_message_label.text = 'Username already exists.'
             return
         try:
-            self._on_create_username_button_press(username)
+            self._on_create_username_button_press(self.session, username)
             screen.ids.username_message_label = ''
             self.update_usernames()
             self.sm.current = 'UserLoginScreen'
         except Exception as e:
             print('Error with adding user to MySQL', e)
 
-    @staticmethod
-    def _on_create_username_button_press(self, username):
-        new_user = User(username=username)
-        self.session.add(new_user)
-        self.session.commit()
 
     def update_usernames(self):
         try:

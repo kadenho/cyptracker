@@ -1,6 +1,6 @@
 from unittest import TestCase
 import CrypTracker.apikey
-#import CrypTracker.main
+import CrypTracker.main
 import tempMain
 from Tokenstaller.cryptos import CryptoDatabase
 
@@ -11,9 +11,9 @@ class TestUsernameButtonPress(TestCase):
 
     def test_create_movie_does_not_crash(self):
         url = CryptoDatabase.construct_in_memory_url()
-        movie_database = CryptoDatabase(url)
-        movie_database.ensure_tables_exist()
-        session = movie_database.create_session()
+        crypto_database = CryptoDatabase(url)
+        crypto_database.ensure_tables_exist()
+        session = crypto_database.create_session()
         CrypTracker.main.CrypTrackerApp._on_create_username_button_press(session, 'Example')
 
 class TestUsernameButtonPressTemp(TestCase):
@@ -23,7 +23,7 @@ class TestUsernameButtonPressTemp(TestCase):
 
     def test_create_movie_does_not_crash(self):
             url = CryptoDatabase.construct_in_memory_url()
-            movie_database = CryptoDatabase(url)
-            movie_database.ensure_tables_exist()
-            session = movie_database.create_session()
+            crypto_database = CryptoDatabase(url)
+            crypto_database.ensure_tables_exist()
+            session = crypto_database.create_session()
             tempMain.CrypTrackerAppTemp._on_create_username_button_press(session, 'Example')
