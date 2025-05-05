@@ -370,14 +370,18 @@ class CrypTrackerApp(App):
             screen.ids.username_message_label.text = 'Username already exists.'
             return
         try:
-            new_user = User(username=username)
-            self.session.add(new_user)
-            self.session.commit()
+            self._on_create_username_button_press(username)
             screen.ids.username_message_label = ''
             self.update_usernames()
             self.sm.current = 'UserLoginScreen'
         except Exception as e:
             print('Error with adding user to MySQL', e)
+
+    @staticmethod
+    def _on_create_username_button_press(self, username):
+        new_user = User(username=username)
+        self.session.add(new_user)
+        self.session.commit()
 
     def update_usernames(self):
         try:
