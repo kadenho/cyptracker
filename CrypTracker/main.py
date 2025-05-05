@@ -790,9 +790,9 @@ class CrypTrackerApp(App):
         list_box.searched_cryptos_list = []
         coins = self.pull_api_coins()
         for coin in coins:
-            list_box.searched_cryptos_list.append(self.assemble_tuple(coin))
+            list_box.searched_cryptos_list.append(self.assemble_tuple(coin)) # pull coins from the api
         try:
-            list_box.searched_cryptos_list = sorted(list_box.searched_cryptos_list, key=lambda x: x[0])
+            list_box.searched_cryptos_list = sorted(list_box.searched_cryptos_list, key=lambda x: x[1]) # sort coins by name
             screen = self.root.get_screen('SelectCryptoScreen')
             screen.ids.cryptos_list_boxlayout.clear_widgets()  # clear the old list
             screen.ids.select_crypto_text_input.text = ''
@@ -816,11 +816,11 @@ class CrypTrackerApp(App):
         else:
 
             try:
-                coins = self.pull_api_coins()
+                coins = self.pull_api_coins() # pull all the coins from the api
                 for coin in coins:
-                    if search_query in coin['symbol'].lower() or search_query in coin['name'].lower():
-                        list_box.searched_cryptos_list.append(self.assemble_tuple(coin))
-
+                    if search_query in coin['symbol'].lower() or search_query in coin['name'].lower(): # check if the search result appears in the coin name/symbol
+                        list_box.searched_cryptos_list.append(self.assemble_tuple(coin)) # add coin to the list of coins
+                list_box.searched_cryptos_list = sorted(list_box.searched_cryptos_list, key=lambda x: x[1])  # sort coins by name
                 screen.ids.cryptos_list_boxlayout.clear_widgets()  # remove old rows
                 self.display_cryptos(list_box, screen)
             except TypeError:
