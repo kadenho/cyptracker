@@ -35,14 +35,14 @@ from Tokenstaller.cryptos import Crypto, PortfolioEntry, CryptoPrice, ValueCheck
 
 # External API
 from pycoingecko import CoinGeckoAPI
-from apikey import COINGECKO_API_KEY
-coin_gecko_api = CoinGeckoAPI(demo_api_key=COINGECKO_API_KEY)
+#from apikey import COINGECKO_API_KEY
+#coin_gecko_api = CoinGeckoAPI(demo_api_key=COINGECKO_API_KEY)
 """
-DAGGUMATTI APPROVED:
-IF UNIT TESTS DO NOT WORK, COMMENT OUT THE THREE EXTERNAL API LINES ABOVE, AND UNCOMMENT THE LINE BELOW
+BOLMAN APPROVED:
+IF UNIT TESTS DO NOT WORK, COMMENT OUT THE BOTTOM TWO EXTERNAL API LINES ABOVE, AND UNCOMMENT THE LINE BELOW
 ERROR PREVENTS API KEY IMPORT, SOLUTION UNKNOWN
 """
-#coin_gecko_api = CoinGeckoAPI(demo_api_key='CG-DqhNSdsRLAMhwMxUt39uthJY')
+coin_gecko_api = CoinGeckoAPI(demo_api_key='CG-DqhNSdsRLAMhwMxUt39uthJY')
 
 def text_color_from_value(text, lower, upper):
     """
@@ -506,6 +506,12 @@ class CrypTrackerApp(App):
         chart_screen.ids.pie_chart_box.add_widget(FigureCanvasKivyAgg(plt.gcf()))  # add the new chart
         plt.close()
 
+    @staticmethod
+    def _add_crypto(session, added_crypto_id, name, symbol):
+        crypto = Crypto(name=name, symbol=symbol, crypto_id=added_crypto_id)
+        session.add(crypto)
+        session.commit()
+
     def add_crypto(self, name, symbol):
         """
         Adds a crypto to the database via a name and symbol.
@@ -549,8 +555,7 @@ class CrypTrackerApp(App):
                                f'Crypto with id \'{crypto.crypto_id}\' is already in the database.',
                                'Add Cryptocurrency')
             return
-        self.session.add(crypto)
-        self.session.commit()
+        self._add_crypto(self.session, added_crypto_id, name, symbol)
         self.display_popup('Entry Added', 'Crypto entry added.', 'Portfolio Menu')
 
     def delete_crypto(self, crypto_id):
@@ -576,21 +581,24 @@ class CrypTrackerApp(App):
                            f'Crypto "{crypto_id}" successfully deleted',
                            'Portfolio Menu')
 
+    @staticmethod
+    def _add_crypto_price(session, crypto_id, price, timestamp):
+        crypto_price = CryptoPrice(crypto_id=crypto_id, timestamp=timestamp, price=price * 100)
+        session.add(crypto_price)
+        session.commit()
+
     def add_crypto_price(self, crypto_id, timestamp, price):
         """
-
         :param crypto_id:
         :param timestamp:
         :param price: Price in dollars
         :return:
         """
-        crypto_price = CryptoPrice(crypto_id=crypto_id, timestamp=timestamp, price=price * 100)
         # If an entry in crypto_prices with that timestamp and crypto already exists, exit
         if self.session.query(CryptoPrice).filter(CryptoPrice.crypto_id == crypto_id).filter(
                 CryptoPrice.timestamp == timestamp).count() != 0:
             return
-        self.session.add(crypto_price)
-        self.session.commit()
+        self._add_crypto_price(self.session, crypto_id, price, timestamp)
 
     def modify_portfolio_entry(self, crypto_id=None, entry_date=None, quantity=None, operation=None, entry_id=None,
                                ):
