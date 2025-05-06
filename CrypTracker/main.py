@@ -35,10 +35,14 @@ from Tokenstaller.cryptos import Crypto, PortfolioEntry, CryptoPrice, ValueCheck
 
 # External API
 from pycoingecko import CoinGeckoAPI
-#from apikey import COINGECKO_API_KEY
-
-COINGECKO_API_KEY =  'CG-DqhNSdsRLAMhwMxUt39uthJY'
+from apikey import COINGECKO_API_KEY
 coin_gecko_api = CoinGeckoAPI(demo_api_key=COINGECKO_API_KEY)
+"""
+DAGGUMATTI APPROVED:
+IF UNIT TESTS DO NOT WORK, COMMENT OUT THE THREE EXTERNAL API LINES ABOVE, AND UNCOMMENT THE LINE BELOW
+ERROR PREVENTS API KEY IMPORT, SOLUTION UNKNOWN
+"""
+#coin_gecko_api = CoinGeckoAPI(demo_api_key='CG-DqhNSdsRLAMhwMxUt39uthJY')
 
 def text_color_from_value(text, lower, upper):
     """
@@ -78,6 +82,9 @@ class MySQLPasswordScreen(Screen):
     def reset_page(self):
         self.ids.password_text_input.text = ''
 
+
+class PriceTrendsScreen(Screen):
+    pass
 
 
 class UserLoginScreen(Screen):
@@ -350,6 +357,7 @@ class CrypTrackerApp(App):
             self.sm.add_widget(PieChartScreen(name='Pie Chart'))
             self.sm.add_widget(SelectCryptoScreen(name='SelectCryptoScreen'))
             self.sm.add_widget(ViewHistoryScreen(name='ViewHistoryScreen'))
+            self.sm.add_widget(PriceTrendsScreen(name='PriceTrendsScreen'))
             self.sm.current = 'UserLoginScreen'
         except sqlalchemy.exc.ProgrammingError:
             self.display_popup('Password Error', 'Please re-enter your password and try again.', 'MySQLPasswordScreen')
