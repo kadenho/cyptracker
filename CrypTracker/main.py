@@ -153,6 +153,27 @@ class DeleteCryptocurrencyScreen(AddDeleteScreen):
 class ManagePortfolioEntriesScreen(Screen):
     pass
 
+class ViewPortfolioEntryHistoryScreen(Screen):
+    crypto_id = StringProperty()
+    purchase_date = StringProperty()
+
+    def update_page(self):
+        # Retrieve the entry with the same id as the user selects from the spinner
+        spinner_text = self.ids.spinner_view_portfolio_entry_history.text
+        numbers_in_spinner_text = re.match(r'\d', spinner_text)
+        if numbers_in_spinner_text is None:
+            return
+        entry = app.session.query(PortfolioEntry).filter(PortfolioEntry.entry_id == int(spinner_text)).first()
+        crypto_id = entry.crypto_id
+        elapsed_time = datetime.now() - entry.timestamp
+        quantity = entry.quantity
+        api_values = coin_gecko_api.get_coin_market_chart_by_id(crypto_id, 'usd', elapsed_time)
+        timestamps = []
+        values = []
+        for value in api_values['prices']:
+            timestamps.append(datetime.fromtimestamp(value[0] / 1000))
+            values.append(round(value[1] * quantity, 2))
+        app.display_historical_graph(self.ids.view_portfolio_entry_history_chart_box, timestamps, values, crypto_id)
 
 class AddPortfolioEntryScreen(AddDeleteScreen):
     def reset_page(self):
@@ -353,6 +374,7 @@ class CrypTrackerApp(App):
             self.sm.add_widget(AddPortfolioEntryScreen(name='Add Portfolio Entry'))
             self.sm.add_widget(UpdatePortfolioEntryScreen(name='Update Portfolio Entry'))
             self.sm.add_widget(DeletePortfolioEntryScreen(name='Delete Portfolio Entry'))
+            self.sm.add_widget(ViewPortfolioEntryHistoryScreen(name='View Portfolio Entry History'))
             self.sm.add_widget(CheckPortfolioScreen(name='Check Portfolio'))
             self.sm.add_widget(PieChartScreen(name='Pie Chart'))
             self.sm.add_widget(SelectCryptoScreen(name='SelectCryptoScreen'))
@@ -1195,6 +1217,8 @@ class CrypTrackerApp(App):
             self.display_historical_graph(screen.ids.dashboard_chart_box, timestamps, values, most_invested_coin)
         else:
             screen.ids.dashboard_chart_box.clear_widgets()
+
+
 
 
 class CustomButton(Button):
