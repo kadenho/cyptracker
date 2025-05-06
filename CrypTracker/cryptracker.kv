@@ -244,40 +244,133 @@ ScreenManager:
             Widget:
                 size_hint: (.25, 1)
         Widget:
-<AboutHelpScreen>
+<AboutHelpScreen>:
     name: 'AboutHelpScreen'
+
     canvas.before:
         Color:
-            rgba: (0,0,0,1)
+            rgba: 0, 0, 0, 1
         Rectangle:
             pos: self.pos
             size: self.size
-    BoxLayout:
-        orientation: 'vertical'
-        Label:
-            text: 'About/Help'
-            font_size: sp(50)
-            color: (1,1,1,1)
-        Widget:
-        Label:
-            text: "Instructions"
-        Label:
-            halign: 'center'
-            text: 'Link to CoinGecko API documentation\nhttps://docs.coingecko.com/v3.0.1/reference/endpoint-overview'
+
+    ScrollView:
+        id: instructions_scroll
+        do_scroll_x: False
+
         BoxLayout:
-            orientation: 'horizontal'
-            Widget:
-                size_hint: (.25, 1)
-            Button:
-                id: about_help_back_button
-                text: 'Back'
+            orientation: 'vertical'
+            size_hint_y: None
+            padding: 20
+            spacing: 20
+            height: self.minimum_height
+
+            Label:
+                text: 'About / Help'
+                font_size: sp(50)
+                color: 1, 1, 1, 1
+                size_hint_y: None
+                height: self.texture_size[1]
+
+            Label:
+                text: 'Portfolio App Instructions'
                 font_size: sp(30)
-                on_press:
-                    app.on_about_help_back_button_press()
-                    app.display_home_screen_graph()
-            Widget:
-                size_hint: (.25, 1)
-        Widget:
+                halign: 'center'
+                valign: 'middle'
+                color: 1, 1, 1, 1
+                text_size: self.width, None
+                size_hint_y: None
+                height: self.texture_size[1]
+
+            Label:
+                text: 'Manage Cryptocurrencies'
+                font_size: sp(25)
+                halign: 'center'
+                valign: 'middle'
+                color: 1, 1, 1, 1
+                text_size: self.width, None
+                size_hint_y: None
+                height: self.texture_size[1]
+
+            Label:
+                text: "Add a coin by submitting the coin's name and symbol.\nDelete a coin by submitting the coin's ID, name, and symbol."
+                font_size: sp(20)
+                color: 1, 1, 1, 1
+                halign: 'left'
+                valign: 'top'
+                text_size: self.width, None
+                size_hint_y: None
+                height: self.texture_size[1]
+
+            Label:
+                text: 'Manage Portfolio Entries'
+                font_size: sp(25)
+                halign: 'center'
+                valign: 'middle'
+                color: 1, 1, 1, 1
+                text_size: self.width, None
+                size_hint_y: None
+                height: self.texture_size[1]
+            Label:
+                text: "Add a portfolio entry by submitting the ID of the crypto bought, the day it was bought (within the last year), and the amount purchased.\n\nUpdate a portfolio entry by selecting an entry and editing its information.\nDelete a portfolio entry by selecting an entry and deleting it."
+                font_size: sp(20)
+                color: 1, 1, 1, 1
+                halign: 'left'
+                valign: 'top'
+                text_size: self.width, None
+                size_hint_y: None
+                height: self.texture_size[1]
+
+            Label:
+                text: 'Check Portfolio Value'
+                font_size: sp(25)
+                color: 1, 1, 1, 1
+                halign: 'center'
+                valign: 'middle'
+                text_size: self.width, None
+                size_hint_y: None
+                height: self.texture_size[1]
+
+            Label:
+                text: "View your complete portfolio value and last updated date.\n\nA pie chart of coins invested can be viewed under the 'View Pie Chart' button.\n\nThe 'Fetch New Prices' button updates current values to reflect your true portfolio value."
+                font_size: sp(20)
+                color: 1, 1, 1, 1
+                halign: 'left'
+                valign: 'top'
+                text_size: self.width, None
+                size_hint_y: None
+                height: self.texture_size[1]
+
+            Label:
+                text: "Link to CoinGecko API documentation:\nhttps://docs.coingecko.com/v3.0.1/reference/endpoint-overview"
+                font_size: sp(18)
+                color: 1, 1, 1, 1
+                halign: 'left'
+                valign: 'middle'
+                text_size: self.width, None
+                size_hint_y: None
+                height: self.texture_size[1]
+
+            BoxLayout:
+                orientation: 'horizontal'
+                size_hint_y: None
+                height: 60
+                spacing: 10
+
+                Widget:
+                    size_hint_x: 0.25
+
+                Button:
+                    id: about_help_back_button
+                    text: 'Back'
+                    font_size: sp(30)
+                    size_hint_x: 0.5
+                    on_press:
+                        app.on_about_help_back_button_press()
+                        app.display_home_screen_graph()
+
+                Widget:
+                    size_hint_x: 0.25
 <PriceTrendsScreen>
     name: 'PriceTrendsScreen'
     canvas.before:
