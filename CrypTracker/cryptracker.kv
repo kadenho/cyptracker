@@ -340,7 +340,42 @@ ScreenManager:
                 text_size: self.width, None
                 size_hint_y: None
                 height: self.texture_size[1]
-
+            Label:
+                text: 'Historical Price App Instructions'
+                font_size: sp(30)
+                halign: 'center'
+                valign: 'middle'
+                color: 1, 1, 1, 1
+                text_size: self.width, None
+                size_hint_y: None
+                height: self.texture_size[1]
+            Label:
+                text: "Coins are list on the left along with their respective value and percent change to the right. You are able to find more coins via the next and back button or by searching in the search bar. "
+                font_size: sp(20)
+                color: 1, 1, 1, 1
+                halign: 'left'
+                valign: 'top'
+                text_size: self.width, None
+                size_hint_y: None
+                height: self.texture_size[1]
+            Label:
+                text: "After selecting a coin you are given the options of displaying the coins price in a variety of graph types as well as time intervals."
+                font_size: sp(20)
+                color: 1, 1, 1, 1
+                halign: 'left'
+                valign: 'top'
+                text_size: self.width, None
+                size_hint_y: None
+                height: self.texture_size[1]
+            Label:
+                text: "You are also given the option to export the coins price data to a CSV file which is added to the directory."
+                font_size: sp(20)
+                color: 1, 1, 1, 1
+                halign: 'left'
+                valign: 'top'
+                text_size: self.width, None
+                size_hint_y: None
+                height: self.texture_size[1]
             Label:
                 text: "Link to CoinGecko API documentation:\nhttps://docs.coingecko.com/v3.0.1/reference/endpoint-overview"
                 font_size: sp(18)
