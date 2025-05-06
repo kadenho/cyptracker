@@ -465,6 +465,14 @@ ScreenManager:
                 root.manager.current = 'Check Portfolio'
 
         CustomButton:
+            text: 'View Portfolio Entry History'
+            text_color: (0.8, 0.8, 1)
+            size_hint_x: 0.8
+            pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
+            on_press:
+                root.manager.current = 'View Portfolio Entry History'
+
+        CustomButton:
             text: 'Return to CrypTracker'
             text_color: (0.8, 0.8, 0.8, 1)
             size_hint_x: 0.8
@@ -1065,6 +1073,51 @@ ScreenManager:
             size_hint: (1,1)
             padding: (0, 0, 0, 50)
             spacing: 20
+
+        CustomButton:
+            text: 'Return to Menu'
+            pos_hint: {'x': 0.125}
+            size_hint: (0.75, 0.125)
+            on_press:
+                root.manager.current = 'Portfolio Menu'
+
+<ViewPortfolioEntryHistoryScreen>
+    BoxLayout:
+        orientation: 'vertical'
+        Label:
+            text: 'Portfolio Entry Historical Graph'
+            pos_hint: {'center': (0.5, 0.9)}
+            font_size: 24
+            text_size: self.size
+            halign: 'center'
+            valign: 'middle'
+            orientation: 'vertical'
+        BoxLayout:
+            orientation: 'vertical'
+            Spinner:
+                id: spinner_view_portfolio_entry_history
+                text: 'Entry ID'
+                values: []
+                size_hint: (0.5,1.0)
+                pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
+                on_press:
+                    self.values = app.portfolio_info
+                on_text:
+                    self.parent.parent.parent.update_page()
+            Widget:
+
+        BoxLayout:
+            id: view_portfolio_entry_history_chart_box
+            orientation: 'vertical'
+
+            Label:
+                text: 'Select Entry'
+                pos_hint: {'center': (0.5, 0.9)}
+                font_size: 24
+                text_size: self.size
+                halign: 'center'
+                valign: 'middle'
+                orientation: 'vertical'
 
         CustomButton:
             text: 'Return to Menu'
