@@ -79,9 +79,6 @@ class MySQLPasswordScreen(Screen):
         self.ids.password_text_input.text = ''
 
 
-class PriceTrendsScreen(Screen):
-    pass
-
 
 class UserLoginScreen(Screen):
     pass
@@ -353,7 +350,6 @@ class CrypTrackerApp(App):
             self.sm.add_widget(PieChartScreen(name='Pie Chart'))
             self.sm.add_widget(SelectCryptoScreen(name='SelectCryptoScreen'))
             self.sm.add_widget(ViewHistoryScreen(name='ViewHistoryScreen'))
-            self.sm.add_widget(PriceTrendsScreen(name='PriceTrendsScreen'))
             self.sm.current = 'UserLoginScreen'
         except sqlalchemy.exc.ProgrammingError:
             self.display_popup('Password Error', 'Please re-enter your password and try again.', 'MySQLPasswordScreen')
