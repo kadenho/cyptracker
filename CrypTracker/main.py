@@ -35,15 +35,14 @@ from Tokenstaller.cryptos import Crypto, PortfolioEntry, CryptoPrice, ValueCheck
 
 # External API
 from pycoingecko import CoinGeckoAPI
-#from apikey import COINGECKO_API_KEY
-#from apikey import COINGECKO_API_KEY
-#coin_gecko_api = CoinGeckoAPI(demo_api_key=COINGECKO_API_KEY)
+from apikey import COINGECKO_API_KEY #comment out if tests don't work
+coin_gecko_api = CoinGeckoAPI(demo_api_key=COINGECKO_API_KEY) # comment out if tests don't work
 """
 BOLMAN APPROVED:
 IF UNIT TESTS DO NOT WORK, COMMENT OUT THE BOTTOM TWO EXTERNAL API LINES ABOVE, AND UNCOMMENT THE LINE BELOW
 ERROR PREVENTS API KEY IMPORT, SOLUTION UNKNOWN
 """
-coin_gecko_api = CoinGeckoAPI(demo_api_key='CG-DqhNSdsRLAMhwMxUt39uthJY')
+#coin_gecko_api = CoinGeckoAPI(demo_api_key='CG-DqhNSdsRLAMhwMxUt39uthJY')
 
 def text_color_from_value(text, lower, upper):
     """
