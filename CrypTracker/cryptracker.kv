@@ -978,7 +978,6 @@ ScreenManager:
             text_size: self.size
             bold: True
             color: [0.0, 0.0, 0.0, 1.0]
-            outline_width: 1
             halign: 'center'
             valign: 'middle'
             on_text:
@@ -1003,7 +1002,6 @@ ScreenManager:
             text: f'{app.portfolio_report_change_from_previous:,}% from Previous Report'
             color: [0.0, 0.0, 0.0, 1.0]
             text_size: self.size
-            outline_width: 1
             bold: True
             halign: 'center'
             valign: 'middle'
@@ -1015,7 +1013,6 @@ ScreenManager:
             text: f'{app.portfolio_report_change_from_investment:,}% from Initial Investment'
             color: [0.0, 0.0, 0.0, 1.0]
             text_size: self.size
-            outline_width: 1
             bold: True
             halign: 'center'
             valign: 'middle'
@@ -1111,14 +1108,13 @@ ScreenManager:
 <Label>
     font_size: 24
     outline_width: 2
-    outline_color: [1.0, 1.0, 1.0, 1.0]
+    outline_color: [1.0, 1.0, 1.0, 1.0] if self.color[0:3] != [1.0, 1.0, 1.0] else [0, 0, 0, 0]
     color: [0.0, 0.0, 0.0, 1.0]
 
 #Historical price viewer
 
 <Text>:
     color: (1.0, 1.0, 1.0)
-    outline_width: 0
     size_hint: (1, 1)
     text_size: self.width, None
     halign: 'center'
@@ -1129,21 +1125,18 @@ ScreenManager:
     color: (0.0, 0.0, 0.0)
     size_hint: (1, 1)
     text_size: self.width, None
-    outline_width: 0
     height: self.texture_size[1]
     halign: 'center'
     valign: 'middle'
 
 <BackButton>
     size_hint: (0.25,0.1)
-    outline_width: 0
 
 <SelectCryptoBox>
     orientation: 'horizontal'
 
     Button:
         text: '[' + root.crypto_symbol + '] ' + root.crypto_name
-        outline_width: 0
         background_color: (1, 1, 1, 0)
         size_hint: (0.5, 1)
         text_size: self.width, None
@@ -1203,7 +1196,6 @@ ScreenManager:
                         text: 'Search'
                         background_color: (1, 1, 1, 0)
                         text_size: self.width, None
-                        outline_width: 0
                         height: self.texture_size[1]
                         halign: 'center'
                         valign: 'middle'
