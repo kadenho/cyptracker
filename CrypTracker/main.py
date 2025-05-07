@@ -36,6 +36,7 @@ from Tokenstaller.cryptos import Crypto, PortfolioEntry, CryptoPrice, ValueCheck
 # External API
 from pycoingecko import CoinGeckoAPI
 #from apikey import COINGECKO_API_KEY
+#from apikey import COINGECKO_API_KEY
 #coin_gecko_api = CoinGeckoAPI(demo_api_key=COINGECKO_API_KEY)
 """
 BOLMAN APPROVED:

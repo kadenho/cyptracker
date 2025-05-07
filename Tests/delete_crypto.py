@@ -9,12 +9,12 @@ class TestDeleteCrypto(TestCase):
     """
     Test cases for _delete_crypto
     """
-    @staticmethod
-    def test_does_not_crash():
+    def test_does_not_crash(self):
         url = CryptoDatabase.construct_in_memory_url()
         crypto_database = CryptoDatabase(url)
         crypto_database.ensure_tables_exist()
         session = crypto_database.create_session()
+        CrypTracker.main.CrypTrackerApp._add_crypto(session, 'Bitcoin', 'Bitcoin', 'btc')
         CrypTracker.main.CrypTrackerApp._delete_crypto(session, 'Bitcoin')
 
     def test_does_delete(self):
