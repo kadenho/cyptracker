@@ -1,0 +1,27 @@
+from datetime import datetime
+from unittest import TestCase
+import CrypTracker.apikey
+import CrypTracker.main
+from Tokenstaller.cryptos import PortfolioEntry, CryptoDatabase
+
+class TestModifyPortfolio(TestCase):
+    """
+    Test cases for _modify_portfolio
+
+    Does not work yet
+    """
+    def test_does_not_crash(self):
+        url = CryptoDatabase.construct_in_memory_url()
+        crypto_database = CryptoDatabase(url)
+        crypto_database.ensure_tables_exist()
+        session = crypto_database.create_session()
+        CrypTracker.main.CrypTrackerApp._modify_portfolio(session, 'Bitcoin', datetime(year=2025, month=5, day=5), 1, 12, 3)
+
+    def test_inserts_correct_id_name_symbol(self):
+        url = CryptoDatabase.construct_in_memory_url()
+        crypto_database = CryptoDatabase(url)
+        crypto_database.ensure_tables_exist()
+        session = crypto_database.create_session()
+        CrypTracker.main.CrypTrackerApp._modify_portfolio(session, 'Bitcoin', datetime(year=2025, month=5, day=5), 1, 12, 3)
+        actual = session.query(PortfolioEntry).filter(PortfolioEntry.entry_id == 'Bitcoin').one()
+        self.assertEqual(actual.entry_id, 'Bitcoin')

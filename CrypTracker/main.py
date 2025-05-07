@@ -386,7 +386,7 @@ class CrypTrackerApp(App):
             self.sm.current = 'MySQLPasswordScreen'
 
     @staticmethod
-    def _on_create_username_button_press(session, username):
+    def _add_user(session, username):
         new_user = User(username=username)
         session.add(new_user)
         session.commit()
@@ -402,7 +402,7 @@ class CrypTrackerApp(App):
             screen.ids.username_message_label.text = 'Username already exists.'
             return
         try:
-            self._on_create_username_button_press(self.session, username)
+            self._add_user(self.session, username)
             screen.ids.username_message_label = ''
             self.update_usernames()
             self.sm.current = 'UserLoginScreen'
@@ -558,6 +558,12 @@ class CrypTrackerApp(App):
         self._add_crypto(self.session, added_crypto_id, name, symbol)
         self.display_popup('Entry Added', 'Crypto entry added.', 'Portfolio Menu')
 
+    @staticmethod
+    def _delete_crypto(session, crypto_id):
+        deleted_crypto = session.query(Crypto).filter(Crypto.crypto_id == crypto_id).first()
+        session.delete(deleted_crypto)
+        session.commit()
+
     def delete_crypto(self, crypto_id):
         # Don't delete if the spinner text is not set to a value
         if crypto_id == 'Crypto ID' or crypto_id == 'No Cryptos':
@@ -569,8 +575,7 @@ class CrypTrackerApp(App):
         affected_entries = self.session.query(PortfolioEntry).filter(PortfolioEntry.crypto_id == crypto_id)
         # Don't delete a crypto that is used in an entry
         if affected_entries.count() == 0:
-            self.session.delete(deleted_crypto)
-            self.session.commit()
+            self._delete_crypto(self.session, crypto_id)
         else:
             self.display_popup("Can't Remove Crypto",
                                'This crypto is currently used in a portfolio entry, '
@@ -600,6 +605,31 @@ class CrypTrackerApp(App):
             return
         self._add_crypto_price(self.session, crypto_id, price, timestamp)
 
+    @staticmethod
+    def _modify_portfolio(session, entered_crypto_id, entered_entry_date, entered_entry_id, entered_investment, entered_quantity):
+        entry = session.query(PortfolioEntry).filter(PortfolioEntry.entry_id == entered_entry_id).one()
+        entry.crypto_id = entered_crypto_id
+        entry.timestamp = entered_entry_date
+        entry.quantity = entered_quantity
+        entry.investment = entered_investment
+        session.commit()
+
+    @staticmethod
+    def _add_portfolio(session, crypto_id, entry_date, investment, quantity, user_id):
+        portfolio_entry = PortfolioEntry(crypto_id=crypto_id,
+                                         timestamp=entry_date,
+                                         quantity=quantity,
+                                         investment=investment,
+                                         user_id=user_id)
+        session.add(portfolio_entry)
+        session.commit()
+
+    @staticmethod
+    def _delete_portfolio(session, entry_id):
+        entry = session.query(PortfolioEntry).filter(PortfolioEntry.entry_id == entry_id).one()
+        session.delete(entry)
+        session.commit()
+
     def modify_portfolio_entry(self, crypto_id=None, entry_date=None, quantity=None, operation=None, entry_id=None,
                                ):
         """
@@ -615,14 +645,13 @@ class CrypTrackerApp(App):
         # Logic for deleting a portfolio entry
         if operation == 'Delete':
             try:
-                entry = self.session.query(PortfolioEntry).filter(PortfolioEntry.entry_id == entry_id).one()
+                self.session.query(PortfolioEntry).filter(PortfolioEntry.entry_id == entry_id).one()
             except SQLAlchemyError:
                 self.display_popup('No Portfolio Entry Found',
                                    f'There is no portfolio entry with id "{entry_id}"',
                                    'Manage Portfolio Entries')
                 return
-            self.session.delete(entry)
-            self.session.commit()
+            self._delete_portfolio(self.session, entry_id)
             self.display_popup('Entry Deleted',
                                'Portfolio entry successfully deleted.',
                                'Manage Portfolio Entries')
@@ -688,14 +717,8 @@ class CrypTrackerApp(App):
                 return
             # Logic for adding an entry
             if operation == "Add":
-                portfolio_entry = PortfolioEntry(crypto_id=crypto_id,
-                                                 timestamp=entry_date,
-                                                 quantity=quantity,
-                                                 investment=investment,
-                                                 user_id=self.user_id)
                 try:
-                    self.session.add(portfolio_entry)
-                    self.session.commit()
+                    self._add_portfolio(self.session, crypto_id, entry_date, investment, quantity, self.user_id)
                 except SQLAlchemyError as error:
                     print(str(error), self.session.query(CryptoPrice).filter(CryptoPrice.crypto_id == crypto_id \
                                                                              and CryptoPrice.timestamp == entry_date).first().price)
@@ -708,20 +731,24 @@ class CrypTrackerApp(App):
                 return
             # Logic for updating a portfolio entry
             try:
-                entry = self.session.query(PortfolioEntry).filter(PortfolioEntry.entry_id == entry_id).one()
+                self.session.query(PortfolioEntry).filter(PortfolioEntry.entry_id == entry_id).one()
             except SQLAlchemyError:
                 self.display_popup('No Portfolio Entry Found',
                                    f'There is no portfolio entry with id "{entry_id}"',
                                    'Manage Portfolio Entries')
                 return
-            entry.crypto_id = crypto_id
-            entry.timestamp = entry_date
-            entry.quantity = quantity
-            entry.investment = investment
-            self.session.commit()
+            self._modify_portfolio(self.session, crypto_id, entry_date, entry_id, investment, quantity)
             self.display_popup(title='Entry Updated',
                                text='Portfolio entry successfully updated.',
                                next_screen='Manage Portfolio Entries')
+
+    @staticmethod
+    def _add_value_check(session, change_from_investment, change_from_previous, timestamp, total_value, user_id):
+        value_check = ValueCheck(timestamp=timestamp, total_value=total_value,
+                                 change_from_previous=change_from_previous,
+                                 user_id=user_id, change_from_investment=change_from_investment)
+        session.add(value_check)
+        session.commit()
 
     def add_value_check(self, timestamp=datetime.now()):
         """
@@ -753,12 +780,8 @@ class CrypTrackerApp(App):
         change_from_investment = 100 * (total_value - total_initial_investment) // abs(total_initial_investment) \
             if total_initial_investment != 0 else 0
 
-        value_check = ValueCheck(timestamp=timestamp, total_value=total_value,
-                                 change_from_previous=change_from_previous,
-                                 user_id=self.user_id, change_from_investment=change_from_investment)
         try:
-            self.session.add(value_check)
-            self.session.commit()
+            self._add_value_check(self.session, change_from_investment, change_from_previous, timestamp, total_value, self.user_id)
         except sqlalchemy.exc.DataError as data_error:
             print(data_error)
             self.session.rollback()
@@ -766,14 +789,9 @@ class CrypTrackerApp(App):
                                'The total value of your portfolio was beyond what the database can store.',
                                '')
             total_value = 2 ** 31 - 1
-            value_check = ValueCheck(timestamp=timestamp, total_value=total_value,
-                                     change_from_previous=change_from_previous,
-                                     user_id=self.user_id, change_from_investment=change_from_investment)
-            self.session.add(value_check)
-            self.session.commit()
+            self._add_value_check(self.session, change_from_investment, change_from_previous, timestamp, total_value, self.user_id)
         self.portfolio_report_date = str(timestamp.date())
         self.portfolio_report_total = total_value
-
         if previous_value_check is not None:
             self.portfolio_report_previous_date = str(previous_value_check.timestamp.date())
         else:
@@ -814,7 +832,6 @@ class CrypTrackerApp(App):
             if crypto_price.count() == 0:
                 price = round(coin_gecko_api.get_price(crypto_id, 'usd')[crypto_id]['usd'], 2)
                 self.add_crypto_price(crypto_id, current_time, price)
-                self.session.commit()
             current_price = self.session.query(CryptoPrice).filter(
                 and_(CryptoPrice.crypto_id == crypto_id, CryptoPrice.timestamp == current_time)).first()
             crypto_quantities_prices[crypto_id][2] = crypto_quantities_prices[crypto_id][0] * current_price.price
