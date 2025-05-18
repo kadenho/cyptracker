@@ -3,7 +3,6 @@ from unittest import TestCase
 
 from sqlalchemy.exc import NoResultFound
 
-import CrypTracker.apikey
 import CrypTracker.main
 from Tokenstaller.cryptos import PortfolioEntry, CryptoDatabase
 

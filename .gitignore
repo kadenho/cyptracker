@@ -1,0 +1,18 @@
+# Default ignored files
+/shelf/
+/workspace.xml
+*.pyc
+*.pyo
+__pycache__/
+.idea/
+*.iml
+*.iws
+*.ipr
+venv/
+bin/
+.DS_Store
+._*
+# API Key storage file
+apikey.py
+# Generated CSV files
+*.csv

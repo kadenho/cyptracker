@@ -3,12 +3,10 @@ import csv
 import re
 import sys
 from datetime import datetime, date, timedelta, time
-
-import mplfinance as mpf
-import pandas as pd
-import requests
 # SQLAlchemy
 import sqlalchemy
+from sqlalchemy import and_
+from sqlalchemy.exc import SQLAlchemyError
 # Kivy
 from kivy.app import App
 from kivy.core.window import Window
@@ -24,25 +22,22 @@ from kivy_garden.matplotlib import FigureCanvasKivyAgg
 # Matplotlib
 from matplotlib import pyplot as plt
 from matplotlib.dates import ConciseDateFormatter, AutoDateLocator
-from sqlalchemy import and_
-from sqlalchemy.exc import SQLAlchemyError
+# Data Manipulation
+import mplfinance as mpf
+import pandas as pd
 
 # Disables flooding the console with debug messages on graph render
 plt.set_loglevel(level='warning')
 
-# Your Modules
+# Database Classes
 from Tokenstaller.cryptos import Crypto, PortfolioEntry, CryptoPrice, ValueCheck, User, CryptoDatabase
 
 # External API
 from pycoingecko import CoinGeckoAPI
-from apikey import COINGECKO_API_KEY #comment out if tests don't work
-coin_gecko_api = CoinGeckoAPI(demo_api_key=COINGECKO_API_KEY) # comment out if tests don't work
-"""
-BOLMAN APPROVED:
-IF UNIT TESTS DO NOT WORK, COMMENT OUT THE BOTTOM TWO EXTERNAL API LINES ABOVE, AND UNCOMMENT THE LINE BELOW
-ERROR PREVENTS API KEY IMPORT, SOLUTION UNKNOWN
-"""
-#coin_gecko_api = CoinGeckoAPI(demo_api_key='CG-DqhNSdsRLAMhwMxUt39uthJY')
+from apikey import COINGECKO_API_KEY
+import requests
+
+coin_gecko_api = CoinGeckoAPI(demo_api_key=COINGECKO_API_KEY)
 
 def text_color_from_value(text, lower, upper):
     """
@@ -153,6 +148,7 @@ class DeleteCryptocurrencyScreen(AddDeleteScreen):
 class ManagePortfolioEntriesScreen(Screen):
     pass
 
+
 class ViewPortfolioEntryHistoryScreen(Screen):
     crypto_id = StringProperty()
     purchase_date = StringProperty()
@@ -174,6 +170,7 @@ class ViewPortfolioEntryHistoryScreen(Screen):
             timestamps.append(datetime.fromtimestamp(value[0] / 1000))
             values.append(round(value[1] * quantity, 2))
         app.display_historical_graph(self.ids.view_portfolio_entry_history_chart_box, timestamps, values, crypto_id)
+
 
 class AddPortfolioEntryScreen(AddDeleteScreen):
     def reset_page(self):
@@ -409,7 +406,6 @@ class CrypTrackerApp(App):
         except Exception as e:
             print('Error with adding user to MySQL', e)
 
-
     def update_usernames(self):
         try:
             users = self.session.query(User).all()
@@ -571,7 +567,6 @@ class CrypTrackerApp(App):
                                'Please select a crypto to delete, if there are any.',
                                'Delete Cryptocurrency')
             return
-        deleted_crypto = self.session.query(Crypto).filter(Crypto.crypto_id == crypto_id).first()
         affected_entries = self.session.query(PortfolioEntry).filter(PortfolioEntry.crypto_id == crypto_id)
         # Don't delete a crypto that is used in an entry
         if affected_entries.count() == 0:
@@ -606,7 +601,8 @@ class CrypTrackerApp(App):
         self._add_crypto_price(self.session, crypto_id, price, timestamp)
 
     @staticmethod
-    def _modify_portfolio(session, entered_crypto_id, entered_entry_date, entered_entry_id, entered_investment, entered_quantity):
+    def _modify_portfolio(session, entered_crypto_id, entered_entry_date, entered_entry_id, entered_investment,
+                          entered_quantity):
         entry = session.query(PortfolioEntry).filter(PortfolioEntry.entry_id == entered_entry_id).one()
         entry.crypto_id = entered_crypto_id
         entry.timestamp = entered_entry_date
@@ -781,7 +777,8 @@ class CrypTrackerApp(App):
             if total_initial_investment != 0 else 0
 
         try:
-            self._add_value_check(self.session, change_from_investment, change_from_previous, timestamp, total_value, self.user_id)
+            self._add_value_check(self.session, change_from_investment, change_from_previous, timestamp, total_value,
+                                  self.user_id)
         except sqlalchemy.exc.DataError as data_error:
             print(data_error)
             self.session.rollback()
@@ -789,7 +786,8 @@ class CrypTrackerApp(App):
                                'The total value of your portfolio was beyond what the database can store.',
                                '')
             total_value = 2 ** 31 - 1
-            self._add_value_check(self.session, change_from_investment, change_from_previous, timestamp, total_value, self.user_id)
+            self._add_value_check(self.session, change_from_investment, change_from_previous, timestamp, total_value,
+                                  self.user_id)
         self.portfolio_report_date = str(timestamp.date())
         self.portfolio_report_total = total_value
         if previous_value_check is not None:
@@ -846,9 +844,10 @@ class CrypTrackerApp(App):
         list_box.searched_cryptos_list = []
         coins = self.pull_api_coins()
         for coin in coins:
-            list_box.searched_cryptos_list.append(self.assemble_tuple(coin)) # pull coins from the api
+            list_box.searched_cryptos_list.append(self.assemble_tuple(coin))  # pull coins from the api
         try:
-            list_box.searched_cryptos_list = sorted(list_box.searched_cryptos_list, key=lambda x: x[1]) # sort coins by name
+            list_box.searched_cryptos_list = sorted(list_box.searched_cryptos_list,
+                                                    key=lambda x: x[1].lower())  # sort coins by name
             screen = self.root.get_screen('SelectCryptoScreen')
             screen.ids.cryptos_list_boxlayout.clear_widgets()  # clear the old list
             screen.ids.select_crypto_text_input.text = ''
@@ -872,11 +871,14 @@ class CrypTrackerApp(App):
         else:
 
             try:
-                coins = self.pull_api_coins() # pull all the coins from the api
+                coins = self.pull_api_coins()  # pull all the coins from the api
                 for coin in coins:
-                    if search_query in coin['symbol'].lower() or search_query in coin['name'].lower(): # check if the search result appears in the coin name/symbol
-                        list_box.searched_cryptos_list.append(self.assemble_tuple(coin)) # add coin to the list of coins
-                list_box.searched_cryptos_list = sorted(list_box.searched_cryptos_list, key=lambda x: x[1])  # sort coins by name
+                    if search_query in coin['symbol'].lower() or search_query in coin[
+                        'name'].lower():  # check if the search result appears in the coin name/symbol
+                        list_box.searched_cryptos_list.append(
+                            self.assemble_tuple(coin))  # add coin to the list of coins
+                list_box.searched_cryptos_list = sorted(list_box.searched_cryptos_list,
+                                                        key=lambda x: x[1])  # sort coins by name
                 screen.ids.cryptos_list_boxlayout.clear_widgets()  # remove old rows
                 self.display_cryptos(list_box, screen)
             except TypeError:
@@ -901,6 +903,7 @@ class CrypTrackerApp(App):
     def assemble_tuple(self, coin):
         """
         retrieve data and package into a tuple to be added to the list
+        Tuple is in form (crypto_symbol, crypto_name, today_price, percent_change, crypto_id)
         """
         try:
             crypto_symbol = coin['symbol']  # retrieve crypto's symbol
@@ -999,7 +1002,8 @@ class CrypTrackerApp(App):
             assembled_tuple = (datetime.fromtimestamp(value[0] / 1000), round(value[1] * 100, 2))
             screen.crypto_values.append(assembled_tuple)
         timestamps, values = self.get_timestamp_values()
-        self.display_historical_graph(self.root.get_screen('ViewHistoryScreen').ids.chart_box, timestamps, values,  screen.crypto_name)
+        self.display_historical_graph(self.root.get_screen('ViewHistoryScreen').ids.chart_box, timestamps, values,
+                                      screen.crypto_name)
 
     def get_timestamp_values(self):
         timestamps = []
@@ -1020,7 +1024,8 @@ class CrypTrackerApp(App):
         screen = self.root.get_screen('ViewHistoryScreen')
         screen.graph_range = '90_day'
         timestamps, values = self.get_timestamp_values()
-        self.display_historical_graph(self.root.get_screen('ViewHistoryScreen').ids.chart_box, timestamps, values,  screen.crypto_name)
+        self.display_historical_graph(self.root.get_screen('ViewHistoryScreen').ids.chart_box, timestamps, values,
+                                      screen.crypto_name)
 
     def display_thirty_day_graph(self):
         """
@@ -1030,7 +1035,8 @@ class CrypTrackerApp(App):
         screen = self.root.get_screen('ViewHistoryScreen')
         screen.graph_range = '30_day'
         timestamps, values = self.get_timestamp_values()
-        self.display_historical_graph(self.root.get_screen('ViewHistoryScreen').ids.chart_box, timestamps, values,  screen.crypto_name)
+        self.display_historical_graph(self.root.get_screen('ViewHistoryScreen').ids.chart_box, timestamps, values,
+                                      screen.crypto_name)
 
     def display_seven_day_graph(self):
         """
@@ -1039,7 +1045,8 @@ class CrypTrackerApp(App):
         screen = self.root.get_screen('ViewHistoryScreen')
         screen.graph_range = '7_day'
         timestamps, values = self.get_timestamp_values()
-        self.display_historical_graph(self.root.get_screen('ViewHistoryScreen').ids.chart_box, timestamps, values,  screen.crypto_name)
+        self.display_historical_graph(self.root.get_screen('ViewHistoryScreen').ids.chart_box, timestamps, values,
+                                      screen.crypto_name)
 
     def display_one_day_graph(self):
         """
@@ -1048,7 +1055,8 @@ class CrypTrackerApp(App):
         screen = self.root.get_screen('ViewHistoryScreen')
         screen.graph_range = '1_day'
         timestamps, values = self.get_timestamp_values()
-        self.display_historical_graph(self.root.get_screen('ViewHistoryScreen').ids.chart_box, timestamps, values,  screen.crypto_name)
+        self.display_historical_graph(self.root.get_screen('ViewHistoryScreen').ids.chart_box, timestamps, values,
+                                      screen.crypto_name)
 
     def display_line_graph(self):
         """
@@ -1057,7 +1065,8 @@ class CrypTrackerApp(App):
         screen = self.root.get_screen('ViewHistoryScreen')
         screen.graph_type = 'line'
         timestamps, values = self.get_timestamp_values()
-        self.display_historical_graph(self.root.get_screen('ViewHistoryScreen').ids.chart_box, timestamps, values,  screen.crypto_name)
+        self.display_historical_graph(self.root.get_screen('ViewHistoryScreen').ids.chart_box, timestamps, values,
+                                      screen.crypto_name)
 
     def display_bar_graph(self):
         """
@@ -1066,7 +1075,8 @@ class CrypTrackerApp(App):
         screen = self.root.get_screen('ViewHistoryScreen')
         screen.graph_type = 'bar'
         timestamps, values = self.get_timestamp_values()
-        self.display_historical_graph(self.root.get_screen('ViewHistoryScreen').ids.chart_box, timestamps, values,  screen.crypto_name)
+        self.display_historical_graph(self.root.get_screen('ViewHistoryScreen').ids.chart_box, timestamps, values,
+                                      screen.crypto_name)
 
     def display_candlestick_graph(self):
         """
@@ -1075,7 +1085,8 @@ class CrypTrackerApp(App):
         screen = self.root.get_screen('ViewHistoryScreen')
         screen.graph_type = 'candlestick'
         timestamps, values = self.get_timestamp_values()
-        self.display_historical_graph(self.root.get_screen('ViewHistoryScreen').ids.chart_box, timestamps, values,  screen.crypto_name)
+        self.display_historical_graph(self.root.get_screen('ViewHistoryScreen').ids.chart_box, timestamps, values,
+                                      screen.crypto_name)
 
     def display_historical_graph(self, box, timestamps, values, title):
         """
@@ -1242,8 +1253,6 @@ class CrypTrackerApp(App):
             self.display_historical_graph(screen.ids.dashboard_chart_box, timestamps, values, most_invested_coin)
         else:
             screen.ids.dashboard_chart_box.clear_widgets()
-
-
 
 
 class CustomButton(Button):

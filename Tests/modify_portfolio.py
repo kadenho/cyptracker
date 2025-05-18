@@ -1,6 +1,5 @@
 from datetime import datetime
 from unittest import TestCase
-import CrypTracker.apikey
 import CrypTracker.main
 from Tokenstaller.cryptos import PortfolioEntry, CryptoDatabase
 

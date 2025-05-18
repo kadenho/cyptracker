@@ -1,1 +1,0 @@
-COINGECKO_API_KEY = 'CG-hRFfqG8dn9WHmyXm7pkbf8TC'

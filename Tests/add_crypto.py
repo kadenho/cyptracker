@@ -1,5 +1,4 @@
 from unittest import TestCase
-import CrypTracker.apikey
 import CrypTracker.main
 from Tokenstaller.cryptos import CryptoDatabase
 from Tokenstaller.cryptos import Crypto

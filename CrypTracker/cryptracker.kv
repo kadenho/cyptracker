@@ -624,7 +624,6 @@ ScreenManager:
             id: delete_crypto_name
             text: ''
             color: [1.0, 1.0, 1.0, 1.0]
-            outline_color: [0.0, 0.0, 0.0, 1.0]
             size_hint: (0.5,1.0)
             pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
 
@@ -638,7 +637,6 @@ ScreenManager:
             id: delete_crypto_symbol
             text: ''
             color: [1.0, 1.0, 1.0, 1.0]
-            outline_color: [0.0, 0.0, 0.0, 1.0]
             size_hint: (0.5,1.0)
             pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
 
@@ -902,7 +900,6 @@ ScreenManager:
             id: delete_crypto_id
             text: 'Crypto ID'
             color: [1.0, 1.0, 1.0, 1.0]
-            outline_color: [0.0, 0.0, 0.0, 1.0]
             size_hint: (0.5,1.0)
             pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
 
@@ -916,7 +913,6 @@ ScreenManager:
             id: delete_date_text
             text: 'YYYY-MM-DD'
             color: [1.0, 1.0, 1.0, 1.0]
-            outline_color: [0.0, 0.0, 0.0, 1.0]
             size_hint_x: 0.8
             pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
 
@@ -930,7 +926,6 @@ ScreenManager:
             id: delete_quantity_text
             text: '0'
             color: [1.0, 1.0, 1.0, 1.0]
-            outline_color: [0.0, 0.0, 0.0, 1.0]
             size_hint_x: 0.8
             pos_hint: {'x': 0.5 - self.size[0]/(2*self.parent.size[0])}
 
@@ -1161,6 +1156,7 @@ ScreenManager:
 <Label>
     font_size: 24
     outline_width: 2
+    # Make outlines white if the text color is not white, otherwise make them black
     outline_color: [1.0, 1.0, 1.0, 1.0] if self.color[0:3] != [1.0, 1.0, 1.0] else [0, 0, 0, 0]
     color: [0.0, 0.0, 0.0, 1.0]
 
