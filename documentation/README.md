@@ -1,6 +1,8 @@
 # CrypTracker
 ## Introduction
-CrypTracker is a cryptocurrency tracking app. With it, you can watch, track, and view the price history of cryptocurrencies. 
+CrypTracker is a cryptocurrency tracking app. With it, you can watch, track, and view the price history of cryptocurrencies. \
+\
+Developed for use on Python 3.10
 
 ## Table of Contents
 - [Installation](#installation)
