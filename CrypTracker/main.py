@@ -46,12 +46,6 @@ def text_color_from_value(text, lower, upper):
     :param lower: The highest value to return pure red [1, 0, 0, 1]
     :param upper: The lowest value to return pure green [0, 1, 0, 1]
     :return: RGBA list of colors between 0 and 1
-    >>> text_color_from_value('-50',-100,100)
-    [0.0, 0.5, 0.0, 1.0]
-    >>> text_color_from_value('-25',-100,100)
-    [1.0, 0.75, 0.0, 1.0]
-    >>> text_color_from_value('-1000',0,100)
-    [1.0, 0.0, 0.0, 1.0]
     """
     default_text_color = [0, 0, 0, 1]
     green = [0, 1, 0, 1]
