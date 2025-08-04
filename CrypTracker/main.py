@@ -3,10 +3,12 @@ import csv
 import re
 import sys
 from datetime import datetime, date, timedelta, time
+
+# Data Manipulation
+import mplfinance as mpf
+import pandas as pd
 # SQLAlchemy
 import sqlalchemy
-from sqlalchemy import and_
-from sqlalchemy.exc import SQLAlchemyError
 # Kivy
 from kivy.app import App
 from kivy.core.window import Window
@@ -22,9 +24,8 @@ from kivy_garden.matplotlib import FigureCanvasKivyAgg
 # Matplotlib
 from matplotlib import pyplot as plt
 from matplotlib.dates import ConciseDateFormatter, AutoDateLocator
-# Data Manipulation
-import mplfinance as mpf
-import pandas as pd
+from sqlalchemy import and_
+from sqlalchemy.exc import SQLAlchemyError
 
 # Disables flooding the console with debug messages on graph render
 plt.set_loglevel(level='warning')
@@ -38,6 +39,7 @@ from apikey import COINGECKO_API_KEY
 import requests
 
 coin_gecko_api = CoinGeckoAPI(demo_api_key=COINGECKO_API_KEY)
+
 
 def text_color_from_value(text, lower, upper):
     """
