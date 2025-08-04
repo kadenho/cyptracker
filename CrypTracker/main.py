@@ -807,8 +807,6 @@ class CrypTrackerApp(App):
         :return:
         """
         # stores the current time with seconds and microseconds set to 0, since coingecko updates prices per minute
-        current_time = datetime.now() - timedelta(seconds=datetime.now().second,
-                                                  microseconds=datetime.now().microsecond)
         entries = self.session.query(PortfolioEntry).filter(PortfolioEntry.user_id == self.user_id)
         # Dict of entry.crypto_id: (total quantity, total investment, total held)
         crypto_quantities_prices = dict()
@@ -820,11 +818,15 @@ class CrypTrackerApp(App):
             crypto_quantities_prices[entry.crypto_id][1] += entry.investment
         # Set the price held at the current time for each crypto
         for crypto_id in crypto_quantities_prices:
+            current_time = datetime.now() - timedelta(seconds=datetime.now().second,
+                                                      microseconds=datetime.now().microsecond)
             crypto_price = self.session.query(CryptoPrice).filter(
                 and_(CryptoPrice.timestamp == current_time, CryptoPrice.crypto_id == crypto_id))
             # Add new price to database if none are found at the current time
             if crypto_price.count() == 0:
                 price = round(coin_gecko_api.get_price(crypto_id, 'usd')[crypto_id]['usd'], 2)
+                current_time = datetime.now() - timedelta(seconds=datetime.now().second,
+                                                          microseconds=datetime.now().microsecond)
                 self.add_crypto_price(crypto_id, current_time, price)
             current_price = self.session.query(CryptoPrice).filter(
                 and_(CryptoPrice.crypto_id == crypto_id, CryptoPrice.timestamp == current_time)).first()
