@@ -546,7 +546,7 @@ class CrypTrackerApp(App):
                                'Add Cryptocurrency')
             return
         self._add_crypto(self.session, added_crypto_id, name, symbol)
-        self.display_popup('Entry Added', 'Crypto entry added.', 'Portfolio Menu')
+        self.display_popup('Entry Added', 'Cryptocurrency added.', 'Portfolio Menu')
 
     @staticmethod
     def _delete_crypto(session, crypto_id):
