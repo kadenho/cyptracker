@@ -1,6 +1,6 @@
 import sqlalchemy
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, DateTime, Index, \
-    ForeignKeyConstraint
+    ForeignKeyConstraint, BigInteger
 from sqlalchemy.orm import sessionmaker, relationship
 
 Persisted = sqlalchemy.orm.declarative_base()
@@ -21,8 +21,8 @@ class PortfolioEntry(Persisted):
     timestamp = Column(DateTime, nullable=False)
     crypto_id = Column(String(64), nullable=False)
     user_id = Column(Integer, ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False)
-    quantity = Column(Integer, nullable=False)
-    investment = Column(Integer, nullable=False)
+    quantity = Column(BigInteger, nullable=False)
+    investment = Column(BigInteger, nullable=False)
 
     __table_args__ = (
         ForeignKeyConstraint(
@@ -47,7 +47,7 @@ class CryptoPrice(Persisted):
     crypto_id = Column(String(64), ForeignKey('cryptos.crypto_id', ondelete='CASCADE'), primary_key=True,
                        nullable=False)
     timestamp = Column(DateTime, primary_key=True, nullable=False)
-    price = Column(Integer, nullable=False)
+    price = Column(BigInteger, nullable=False)
     crypto = relationship('Crypto', back_populates='prices')
     entries = relationship(
         'PortfolioEntry',
@@ -67,9 +67,9 @@ class ValueCheck(Persisted):
     value_check_id = Column(Integer, primary_key=True)
     timestamp = Column(DateTime, nullable=False)
     user_id = Column(Integer, ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False)
-    total_value = Column(Integer, nullable=False)
-    change_from_previous = Column(Integer, nullable=True)
-    change_from_investment = Column(Integer, nullable=False)
+    total_value = Column(BigInteger, nullable=False)
+    change_from_previous = Column(BigInteger, nullable=True)
+    change_from_investment = Column(BigInteger, nullable=False)
     user = relationship('User', back_populates='value_checks')
 
 
